@@ -1,0 +1,26 @@
+{
+  "version" :  "0.0.2",
+  "author:" : "benwinter",
+  "description" : "This is a default command line demo example, how i want a  json to be parsed into a callback tree with contitional execution, runtime callback optioons and exeption handling",
+  "arguments": [
+    {
+      "type" : "OPTION",
+      "flag" : "help",
+      "sflag" : "h",
+      "help" : "This is the default help message for the command line demo\n\nExecting the example binary, with ./mybinary --help this callback is executed, if custom code is given, the code can just be added by using the api for this software\n",
+      "shelp" : "Only the short Help Menu.\nUse '--help' for more info." ,
+      "method" : "exit()"
+    },
+    {
+      "type" : "OPTION",
+      "flag" : "interactive",
+      "sflag" : "i",
+      "help" : "Interactive shell mode"
+    },
+    {
+      "type": "OPTION",
+      "flag": "_logging",
+      "help": "In case we want to create a history file in which we store all previously executed commands"
+    }
+  ]
+}

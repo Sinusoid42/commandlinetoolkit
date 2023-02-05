@@ -1,0 +1,30 @@
+{
+  "version" :  "0.0.2",
+  "author:" : "benwinter",
+  "description" : "This is a default command line demo example, how i want a  json to be parsed into a callback tree with contitional execution, runtime callback optioons and exeption handling",
+  "arguments": [
+    {
+      "type" : "OPTION",
+      "flag" : "help",
+      "sflag" : "h",
+      "help" : "This is the default help message for the command line demo\n\nExecting the example binary, with ./mybinary --help this callback is executed, if custom code is given, the code can just be added by using the api for this software\n",
+      "shelp" : "Only the short Help Menu.\nUse '--help' for more info." ,
+      "method" : "exit()"
+    },
+    {
+      "type" : "OPTION",
+      "required" : true,
+      "flag" : "port",
+      "help" : "With this Option a unix-socket server will be opened for this microservice",
+      "arguments" : [
+        {
+          "type": "PARAM",
+          "required": true,
+          "flag": "portnumber",
+          "data_type": "number[10000:50000]",
+          "help": "The port number"
+        }
+      ]
+    }
+  ]
+}

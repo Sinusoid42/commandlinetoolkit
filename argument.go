@@ -43,6 +43,11 @@ type Argument struct {
 	
 	choices []string //is generated dynamically when parsing trailing parameters for a given command
 	
-	callback func() error //is called when this argument is parsed
+	callback func() CLICODE //is called when this argument is parsed
 	
+	command func(parameters []*Argument, options []*Argument)
+	
+	arguments []*Argument //All available subarguments or commands
+	
+	parent *Argument //The parent argument
 }
