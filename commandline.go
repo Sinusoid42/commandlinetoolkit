@@ -1,10 +1,7 @@
 package commandlinetoolkit
 
 import (
-	`bufio`
 	`fmt`
-	`os`
-	`os/signal`
 )
 
 //base file for building a commandline
@@ -57,7 +54,7 @@ type CommandLine struct {
 	_verbose bool
 	
 	//the interactive shell
-	_shell shell
+	_shell *shell
 }
 
 func NewCommandLine() *CommandLine {
@@ -66,6 +63,7 @@ func NewCommandLine() *CommandLine {
 		_parser:  newparser(),
 		_program: DefaultCommandLineTemplate(),
 	}
+	
 	cli.Rebuild()
 	return cli
 }
@@ -75,14 +73,20 @@ func (c *CommandLine) ReadJSON(path string) {
 }
 
 func (c *CommandLine) Rebuild() CLICODE {
+	c.Clear()
 	
-	c._builder.build(c._program, c)
+	c._builder.Rebuild(c._program, c)
 	
 	return CLI_SUCCESS
 }
 
 func (c CommandLine) JSON() string {
 	return "TODO"
+}
+
+func (c *CommandLine) Clear() CLICODE {
+	
+	return CLI_SUCCESS
 }
 
 func (c CommandLine) String() string {
@@ -110,73 +114,14 @@ func (c *CommandLine) Parse(args []string) CLICODE {
 }
 
 func (c *CommandLine) log(input string) {
-
+	
+	//to log previous commands into the commandline
 }
 
 func (c *CommandLine) runInteractive() {
-	
-	//writer := bufio.NewWriter(os.Stdout)
-	
-	//mysyscall := os.Signal(syscall.SIGINT)
-	
-	scanner := bufio.NewReader(os.Stdin)
-	
-	sysSignal := make(chan os.Signal, 1)
-	signal.Notify(sysSignal, os.Interrupt)
-	
-	sysCallCode := 0
-	
-	f := func() {
-		for sig := range sysSignal {
-			// sig is a ^C, handle it
-			if sig == nil {
-			}
-			fmt.Println("Keyboard Interrupt")
-			fmt.Println("Exit? y/n")
-			fmt.Print(">")
-			sysCallCode = 1 //sysExit
-		}
-		
-	}
-	
-	go f()
-	
-	fmt.Println("TESTING")
-	
-	_input := ""
-	
-	for true {
-		fmt.Print(">")
-		input, _ := scanner.ReadString('\n')
-		
-		if _input == input {
-			continue
-		} else {
-			
-			if sysCallCode != 0 {
-				
-				if len(input) > 1 {
-					if input[0] == 'y' {
-						os.Exit(0)
-					} else {
-						sysCallCode = 0
-					}
-				}
-			} else {
-				if c._logging {
-					c.log(input)
-				}
-				
-			}
-			
-			// we have no signals that come from the syste,
-			//we can run our own commands from this current commandline OR from a new binary that we could execute
-			
-			//here commandline.parse(input
-			
-			_input = input
-		}
-		
-		//fmt.Print(thetabprefix)
-	}
+
+}
+
+func (c *CommandLine) Wait() {
+	c._shell._osHandler._wg.Wait()
 }
