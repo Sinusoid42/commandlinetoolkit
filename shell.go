@@ -257,7 +257,7 @@ func (s *shell) run(cmdline *CommandLine) {
 							
 							if s._input[0] == byte('y') || s._input[0] == byte('Y') {
 								s._osHandler._wg.Done()
-								setSttyState(&(originalSttyState))
+								defer setSttyState(&(originalSttyState))
 								
 							} else {
 								s._osHandler._sysCall = 0
@@ -276,7 +276,7 @@ func (s *shell) run(cmdline *CommandLine) {
 			}
 			//fmt.Print(thetabprefix)
 		}
-		setSttyState(&(originalSttyState))
+		defer setSttyState(&(originalSttyState))
 	}
 	go sh()
 	

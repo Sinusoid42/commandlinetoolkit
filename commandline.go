@@ -124,4 +124,6 @@ func (c *CommandLine) runInteractive() {
 
 func (c *CommandLine) Wait() {
 	c._shell._osHandler._wg.Wait()
+	//reset the original bash
+	defer setSttyState(&(originalSttyState))
 }
