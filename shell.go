@@ -24,13 +24,21 @@ type shell struct {
 	_previnputs [][]byte
 	
 	//stores the prev input
-	_input     []byte
-	_lastInput []byte
+	_input           []byte
+	_lastInput       []byte
+	_lastInputLength int
+	_preFix          string
 	
-	_action    int
-	_currIndex int
-	_rtFlag    int
-	_exit      int
+	_action       int
+	_currIndex    int
+	_rtFlag       int
+	_exit         int
+	_preFixLength int
+	
+	_enabledHistory bool
+	_alert          bool
+	
+	_playAlert bool
 	
 	_logging bool
 	
@@ -54,11 +62,14 @@ func newShell(programName string, _logging bool, cmdline *CommandLine) *shell {
 		//use the default unix/linux keyboardInterrupt
 		
 		//logging
-		_logging:    true,
-		_exit:       0,
-		_currIndex:  0,
-		_previnputs: [][]byte{},
-		
+		_logging:        true,
+		_exit:           0,
+		_currIndex:      0,
+		_previnputs:     [][]byte{},
+		_preFix:         ">>>",
+		_preFixLength:   3,
+		_enabledHistory: true,
+		_playAlert:      true,
 		_osHandler: osHandler{
 			
 			_sysCallInterrupt: syscall.SIGINT,
@@ -133,11 +144,11 @@ func (s *shell) registerSystemSignalCallbacks(cmdline *CommandLine) {
 				
 				fmt.Println("Keyboard Interrupt")
 				fmt.Println("Exit? y/n")
-				fmt.Print(">")
+				fmt.Print(s._preFix)
 				
 				s._osHandler._sysCall = syscall.SIGINT //sysExit
 				//reset buffers
-				s._input = []byte{}
+				//s._input = s._lastInput
 				s._lastInput = []byte{}
 				
 				for {
@@ -148,11 +159,12 @@ func (s *shell) registerSystemSignalCallbacks(cmdline *CommandLine) {
 						}
 						
 						//run at the end once
-						defer s._osHandler._wg.Add(-1)
+						s._osHandler._wg.Add(-1)
 						
 						return
 					}
-					if s._osHandler._sysCall == 0 {
+					
+					if s._osHandler._sysCall == 0 || s._exit == 0 {
 						break
 					}
 				}
@@ -175,7 +187,8 @@ func (s *shell) run(cmdline *CommandLine) {
 	
 	//arrowreader := bufio.NewScanner(os.Stdin)
 	
-	input := []byte{}
+	//input := []byte{}
+	//arrowCallBackInput := []byte{}
 	s._lastInput = []byte{}
 	s._action = -1
 	s._rtFlag = 0
@@ -189,146 +202,58 @@ func (s *shell) run(cmdline *CommandLine) {
 	sh := func() {
 		var bt = make([]byte, 1)
 		
-		fmt.Print(">")
+		fmt.Print(s._preFix)
 		
 		if cmdline._verbose&CLI_VERBOSE_SHELL > 0 {
-			fmt.Println("\n-->shell: Booted shell subroutine")
+			fmt.Print("\n-->shell: Booted shell subroutine")
 		}
 		
 		for {
 			
+			//read every new char, when it is entered into the console
 			os.Stdin.Read(bt)
 			
-			b := bt[0]
+			//from the byte buffer, get the first char alwayss
+			byteInput := bt[0]
 			
-			//if b != lastByte || b == byte('\n') {
-			
-			//lastByte = b
-			
-			if b == byte('\n') {
+			/*
+				Handle the input of a linebreak
+				s._rtFlag (shell.returnFlag)
+				Store Inputs, reset current new input
+			*/
+			if byteInput == byte('\n') {
 				
-				if cmdline._verbose&CLI_VERBOSE_SHELL > 0 {
-					fmt.Println("\n-->shell: Registered CR")
-				}
+				s.handleLineBreakInput(cmdline)
 				
-				s._previnputs = append(s._previnputs, input)
-				s._currIndex = 0
-				
-				s._rtFlag = 1
-				s._lastInput = input
-				//s._input = s._lastInput
-				input = []byte{}
-				if cmdline._verbose&CLI_VERBOSE_SHELL > 0 {
-					fmt.Print("\n-->shell: Previous input: ")
-					fmt.Print(s._lastInput)
-					fmt.Print("\n")
-				}
 			} else {
 				
-				fmt.Print(string(b))
-				s._rtFlag = 0
-				input = append(input, b)
-				s._lastInput = input
+				s.handleKeyInput(byteInput, cmdline)
+				
 			}
-			//}
 			
-			//handle a delete in the same line
-			if b == 127 && len(input) > 1 {
-				//remove last char
-				newInput := input[0 : len(input)-2]
-				
-				//replace char sequence in the current terminal line with empty string
-				fmt.Print("\r")
-				for i := 0; i < len(input); i++ {
-					fmt.Print(" ")
-				}
-				//fill it back up from the beginning with full chars up to n-1
-				fmt.Print("\r")
-				fmt.Print(">" + string(newInput))
-				
-				input = newInput
-				s._lastInput = newInput
-				
-				newInput = nil
-				
-			}
+			s.handleDelete(byteInput)
 			
 			//check for arrow input
 			//handle arrow UP
-			arrowInput := s._lastInput
-			l := len(arrowInput)
-			if l > 3 && arrowInput[l-3] == 27 && arrowInput[l-2] == 91 && arrowInput[l-1] == 65 {
-				
-				fmt.Print("\r") //keep cursor in the current line
-				
-				//clear the current line
-				fmt.Print("\r")
-				for i := 0; i < len(input); i++ {
-					fmt.Print(" ")
-				}
-				
-				fmt.Print("\r") //start the line at the beginning
-				if cmdline._verbose&CLI_VERBOSE_SHELL > 0 {
-					fmt.Println("\n-->shell: Arrow up")
-				}
-				
-				fmt.Print(">ARROW UP")
-				/*
-					linputs := len(s._previnputs)
-					if s._currIndex >= 0 && linputs > 0 && linputs > s._currIndex {
-				
-						s._lastInput = s._previnputs[linputs-1-s._currIndex]
-						input = s._lastInput
-						s._rtFlag = 0
-						s._currIndex++
-				
-						fmt.Print("\n>" + string(s._lastInput))
-				
-					} else {
-						input = []byte{}
-						s._lastInput = []byte{}
-				
-						fmt.Print(">")
-					}
-				*/
-				//go up
-				//s._action = 1
-			}
+			
+			s._action = 0
+			
+			s.handleArrowUp(cmdline)
 			
 			//handle arrow down
-			/*
-				if l > 3 && arrowInput[l-3] == 27 && arrowInput[l-2] == 91 && arrowInput[l-1] == 66 {
-					fmt.Print("\033[F>")
-					//fmt.Printf("\033[F")
-					if cmdline._verbose&CLI_VERBOSE_SHELL > 0 {
-						fmt.Println("\n-->shell: Arrow down")
-					}
 			
-					//fmt.Print("ARROW DOWN")
+			s.handleArrowDown(cmdline)
 			
-					linputs := len(s._previnputs)
-					if s._currIndex > 0 && linputs > 0 && linputs > s._currIndex {
-						s._lastInput = s._previnputs[linputs-1-s._currIndex]
-						input = s._lastInput
-						s._rtFlag = 0
-						s._currIndex--
+			//if history is enabled, we scan through the previous inputs of the commandline
 			
-						fmt.Print(">" + string(s._lastInput))
+			s.iterateHistory()
 			
-					} else {
-						input = []byte{}
-						s._lastInput = []byte{}
-					}
-					//go down
-					//s._action = 2
-				}*/
-			
-			//everything reading finished, request newline adn returnflag is 1
+			//everything reading finished, request newline is processed and returnflag is 1
 			//if rtflag is one, we can also get the previous line input and parse it in the commandline parser
-			
+			//shell._input is now the storage of  the most recent full line commandline Input that was parsed, WITHOUT the prefix
 			if s._rtFlag == 1 {
 				
-				s._input = s._lastInput
+				//s._input = s._lastInput
 				
 				if cmdline._verbose&CLI_VERBOSE_SHELL_PARSE > 0 {
 					fmt.Print("\n-->shell: Previous parseable input: ")
@@ -336,38 +261,29 @@ func (s *shell) run(cmdline *CommandLine) {
 					fmt.Print("\n")
 				}
 				
-				if s._osHandler._sysCall == syscall.SIGINT {
-					
-					if len(s._input) > 0 {
-						
-						//maybe the user entered y|Y as first char
-						if s._input[0] == byte('y') ||
-							s._input[0] == byte('Y') ||
-							//last chat can be \n, so we check last - 1
-							(len(s._input) > 3 &&
-								s._input[len(s._input)-2] == byte('y') ||
-								s._input[len(s._input)-2] == byte('Y')) {
-							
-							fmt.Println("Exit 0")
-							
-							s._exit = 1
-							
-							setSttyState(&(originalSttyState))
-							
-							break
-						} else {
-							s._osHandler._sysCall = 0
-							s._input = []byte{}
-							s._lastInput = []byte{}
-							fmt.Println("aborting...")
-						}
-					}
+				if s.handleSIGINTExit(cmdline) {
+					break
 				}
+				
 				if s._logging {
 					s.log(string(s._input))
 				}
 				
-				// we have no signals that come from the syste,
+				if string(s._input) == "test" {
+					fmt.Print("\nHAHAHAHAHAH")
+				}
+				
+				if string(s._input) == "verbose" {
+					fmt.Print("\n-->shell: Enabling verbose mode")
+					cmdline._verbose |= CLI_VERBOSE_SHELL_PARSE
+				}
+				
+				if string(s._input) == "!verbose" {
+					fmt.Print("\n-->shell: Disabling verbose mode")
+					cmdline._verbose = 0
+				}
+				
+				//we have no signals that come from the syste,
 				//we can run our own commands from this current commandline OR from a new binary that we could execute
 				
 				//here commandline.parse(input
@@ -376,7 +292,7 @@ func (s *shell) run(cmdline *CommandLine) {
 			//fmt.Print(thetabprefix)
 			if s._rtFlag == 1 {
 				s._rtFlag = 0
-				fmt.Print("\n>")
+				fmt.Print("\n" + s._preFix)
 			}
 		}
 		
@@ -384,10 +300,191 @@ func (s *shell) run(cmdline *CommandLine) {
 		setSttyState(&(originalSttyState))
 		
 		//run at exiting the scope
-		defer s._osHandler._wg.Add(-1)
+		s._osHandler._wg.Add(-1)
 		
-		//os.Exit(0)
+		os.Exit(0)
 	}
 	go sh()
 	
+}
+
+func (s *shell) iterateHistory() {
+	if s._enabledHistory && (s._action == 1 || s._action == 2) {
+		linputs := len(s._previnputs)
+		
+		if s._currIndex >= 0 && linputs > s._currIndex {
+			s._lastInput = s._previnputs[linputs-1-s._currIndex]
+			s._rtFlag = 0
+		} else {
+			if -1 >= s._currIndex {
+				s._lastInput = []byte{}
+			}
+			if s._currIndex < -1 {
+				s._currIndex = -1
+				s._alert = true
+			}
+			if s._currIndex >= linputs-1 {
+				s._currIndex = linputs - 1
+				s._alert = true
+			}
+		}
+		if s._alert {
+			s._alert = false
+			if s._playAlert {
+				fmt.Print("\a")
+			}
+		}
+		fmt.Print(string(s._lastInput))
+	}
+}
+
+func (s *shell) handleArrowDown(cmdline *CommandLine) {
+	l := len(s._lastInput)
+	if l > 2 && s._lastInput[l-3] == 27 && s._lastInput[l-2] == 91 && s._lastInput[l-1] == 66 {
+		if l > 2 {
+			s._lastInput = s._lastInput[0 : l-3]
+		} else {
+			s._lastInput = []byte{}
+		}
+		fmt.Print("\033[F" + s._preFix) //keep the cursor in the line
+		fmt.Print("\r")
+		for i := 0; i < len(s._lastInput)+s._preFixLength; i++ {
+			fmt.Print(" ") //clear the entire line
+		}
+		fmt.Print("\r") //start the line at the beginning again
+		if cmdline._verbose&CLI_VERBOSE_SHELL > 0 {
+			fmt.Println("\n-->shell: Arrow down")
+		}
+		fmt.Print(s._preFix)
+		s._currIndex--
+		s._action = 2
+	}
+}
+
+func (s *shell) handleArrowUp(cmdline *CommandLine) {
+	l := len(s._lastInput)
+	if l > 2 && s._lastInput[l-3] == 27 && s._lastInput[l-2] == 91 && s._lastInput[l-1] == 65 {
+		if l > 2 {
+			s._lastInput = s._lastInput[0 : l-3]
+		} else {
+			s._lastInput = []byte{}
+		}
+		fmt.Print("\n" + s._preFix) //keep the cursor in the line
+		//clear the current line
+		fmt.Print("\r")
+		for i := 0; i < len(s._lastInput)+s._preFixLength; i++ {
+			fmt.Print(" ") //clear the entire line
+		}
+		fmt.Print("\r") //start the line at the beginning again
+		//debug?
+		if cmdline._verbose&CLI_VERBOSE_SHELL > 0 {
+			fmt.Println("\n-->shell: Arrow up")
+		}
+		fmt.Print(s._preFix)
+		s._currIndex++
+		s._action = 1
+	}
+}
+
+func (s *shell) handleSIGINTExit(cmdline *CommandLine) bool {
+	if s._osHandler._sysCall == syscall.SIGINT {
+		
+		if len(s._input) > 0 && len(s._input) < 2 {
+			
+			//maybe the user entered y|Y as first char
+			if s._input[0] == byte('y') ||
+				s._input[0] == byte('Y') ||
+				//last chat can be \n, so we check last - 1
+				(len(s._input) > 3 &&
+					(s._input[len(s._input)-2] == byte('y') ||
+						s._input[len(s._input)-2] == byte('Y'))) {
+				
+				fmt.Println("\nExit 0")
+				
+				s._exit = 1
+				
+				setSttyState(&(originalSttyState))
+				
+				return true
+			} else {
+				if cmdline._verbose&CLI_VERBOSE_SHELL > 0 {
+					fmt.Print("\nThe prev input: ")
+					fmt.Print(s._input)
+				}
+				s._exit = 0
+				s._osHandler._sysCall = 0
+				s._input = []byte{}
+				s._lastInput = []byte{}
+				
+				fmt.Print("\naborting...")
+			}
+		} else {
+			if cmdline._verbose&CLI_VERBOSE_SHELL > 0 {
+				fmt.Print("\nThe prev input: ")
+				fmt.Print(s._input)
+			}
+			s._exit = 0
+			s._osHandler._sysCall = 0
+			s._input = []byte{}
+			s._lastInput = []byte{}
+			
+			fmt.Print("\naborting...")
+		}
+	}
+	return false
+}
+
+func (s *shell) handleLineBreakInput(cmdline *CommandLine) {
+	if cmdline._verbose&CLI_VERBOSE_SHELL > 0 {
+		fmt.Print("\n-->shell: Registered CR")
+	}
+	
+	if len(s._lastInput) > 0 {
+		s._previnputs = append(s._previnputs, s._lastInput)
+	}
+	//s._lastInputLength = len(s._lastInput)
+	
+	s._currIndex = -1
+	
+	s._rtFlag = 1
+	
+	s._input = s._lastInput
+	
+	//s._input = s._lastInput
+	s._lastInput = []byte{}
+	if cmdline._verbose&CLI_VERBOSE_SHELL > 0 {
+		fmt.Print("\n-->shell: Previous input: ")
+		fmt.Print(s._lastInput)
+	}
+}
+
+func (s *shell) handleDelete(byteInput byte) {
+	//handle a delete in the same line
+	if byteInput == 127 && len(s._lastInput) > 0 {
+		//remove last char
+		s._lastInput = s._lastInput[0 : len(s._lastInput)-1]
+		
+		//replace char sequence in the current terminal line with empty string
+		fmt.Print("\r")
+		
+		inputlength := len(s._lastInput)
+		
+		for i := 0; i < inputlength+1+s._preFixLength; i++ {
+			fmt.Print(" ")
+		}
+		//fill it back up from the beginning with full chars up to n-1
+		fmt.Print("\r")
+		fmt.Print(s._preFix + string(s._lastInput))
+		
+	}
+}
+
+func (s *shell) handleKeyInput(byteInput byte, cmdline *CommandLine) {
+	if byteInput != 127 && byteInput != byte('\n') {
+		fmt.Print(string(byteInput))
+		
+		s._rtFlag = 0
+		s._lastInput = append(s._lastInput, byteInput)
+		
+	}
 }
