@@ -51,7 +51,7 @@ type CommandLine struct {
 	_options int32
 	
 	//run in verbose mode
-	_verbose bool
+	_verbose int32
 	
 	//the interactive shell
 	_shell *shell
@@ -62,6 +62,7 @@ func NewCommandLine() *CommandLine {
 	cli := &CommandLine{
 		_parser:  newparser(),
 		_program: DefaultCommandLineTemplate(),
+		_verbose: 0,
 	}
 	
 	cli.Rebuild()
@@ -105,10 +106,11 @@ func (c *CommandLine) Parse(args []string) CLICODE {
 	
 	//either we have the programname from the executeable by running or from the json file provided
 	
-	c._shell = newShell(c._programName, c._logging)
+	c._shell = newShell(c._programName, c._logging, c)
 	
 	fmt.Println("DONE:..")
 	
+	c._shell.run(c)
 	return CLI_SUCCESS
 	
 }
@@ -124,6 +126,9 @@ func (c *CommandLine) runInteractive() {
 
 func (c *CommandLine) Wait() {
 	c._shell._osHandler._wg.Wait()
+	
 	//reset the original bash
-	defer setSttyState(&(originalSttyState))
+	setSttyState(&(originalSttyState))
+	//dont need it anymore
+	//os.Exit(0) //here we simulate the CTRL+C in case the syscall didnt get registered
 }
