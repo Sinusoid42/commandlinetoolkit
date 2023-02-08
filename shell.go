@@ -17,6 +17,8 @@ import (
 //if it is run interactively, this struct maintains only history and allows usage for arrow keys when a given input was given to the commandline
 //in interactive mode the shell and cli requires a hot reloading of commands, so can rebuild with --rebuild
 
+//not finished yet
+
 var originalSttyState bytes.Buffer
 
 //the shell struct
@@ -277,7 +279,7 @@ func (s *shell) run(cmdline *CommandLine) {
 				}
 				
 				if string(s._input) == "test" {
-					fmt.Print("\nHAHAHAHAHAH")
+					fmt.Print("\nHAHA")
 				}
 				
 				if string(s._input) == "verbose" {
