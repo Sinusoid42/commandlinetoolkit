@@ -106,7 +106,10 @@ func removeTerminalBuffering() {
 		log.Fatal(err)
 	}
 	//run in this function!
-	
+	//"/dev/tty", "raw", "-echo", "cbreak", "-g"
+	//setSttyState(bytes.NewBufferString("-icanon"))
+	//setSttyState(bytes.NewBufferString("min"))
+	setSttyState(bytes.NewBufferString("-raw"))
 	setSttyState(bytes.NewBufferString("cbreak"))
 	setSttyState(bytes.NewBufferString("-echo"))
 }
@@ -231,6 +234,10 @@ func (s *shell) run(cmdline *CommandLine) {
 				
 			}
 			
+			//if prev input is an arrow up or down, remove the
+			if s.checkForArrow() {
+			}
+			
 			s.handleDelete(byteInput)
 			
 			//check for arrow input
@@ -341,14 +348,19 @@ func (s *shell) iterateHistory() {
 func (s *shell) handleArrowDown(cmdline *CommandLine) {
 	l := len(s._lastInput)
 	if l > 2 && s._lastInput[l-3] == 27 && s._lastInput[l-2] == 91 && s._lastInput[l-1] == 66 {
+		
+		// "\033[F"
+		
+		//fmt.Print("\033[F") //keep the cursor in the line#
+		//remove the arrow bytes from the buffer
 		if l > 2 {
 			s._lastInput = s._lastInput[0 : l-3]
 		} else {
 			s._lastInput = []byte{}
 		}
-		fmt.Print("\033[F" + s._preFix) //keep the cursor in the line
+		
 		fmt.Print("\r")
-		for i := 0; i < len(s._lastInput)+s._preFixLength; i++ {
+		for i := 0; i < len(s._lastInput)+s._preFixLength+4; i++ {
 			fmt.Print(" ") //clear the entire line
 		}
 		fmt.Print("\r") //start the line at the beginning again
@@ -364,15 +376,18 @@ func (s *shell) handleArrowDown(cmdline *CommandLine) {
 func (s *shell) handleArrowUp(cmdline *CommandLine) {
 	l := len(s._lastInput)
 	if l > 2 && s._lastInput[l-3] == 27 && s._lastInput[l-2] == 91 && s._lastInput[l-1] == 65 {
+		
+		fmt.Print("\n") //keep the cursor in the line
+		//remove the arrow bytes from the buffer
 		if l > 2 {
 			s._lastInput = s._lastInput[0 : l-3]
 		} else {
 			s._lastInput = []byte{}
 		}
-		fmt.Print("\n" + s._preFix) //keep the cursor in the line
+		
 		//clear the current line
 		fmt.Print("\r")
-		for i := 0; i < len(s._lastInput)+s._preFixLength; i++ {
+		for i := 0; i < len(s._lastInput)+s._preFixLength+4; i++ {
 			fmt.Print(" ") //clear the entire line
 		}
 		fmt.Print("\r") //start the line at the beginning again
@@ -480,11 +495,17 @@ func (s *shell) handleDelete(byteInput byte) {
 }
 
 func (s *shell) handleKeyInput(byteInput byte, cmdline *CommandLine) {
-	if byteInput != 127 && byteInput != byte('\n') {
-		fmt.Print(string(byteInput))
-		
-		s._rtFlag = 0
-		s._lastInput = append(s._lastInput, byteInput)
-		
+	if byteInput == 127 || byteInput == byte('\n') {
+		return
 	}
+	
+	fmt.Print(string(byteInput))
+	
+	s._rtFlag = 0
+	s._lastInput = append(s._lastInput, byteInput)
+}
+
+func (s *shell) checkForArrow() bool {
+	
+	return false
 }
