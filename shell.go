@@ -7,6 +7,7 @@ import (
 	"os"
 	`os/exec`
 	"os/signal"
+	`strconv`
 	"sync"
 	"syscall"
 )
@@ -41,6 +42,7 @@ type shell struct {
 	_inputDisplayBufferLength int
 	_preFix                   string
 	_prefixColor              Color
+	_verboseColor             Color
 	
 	_arrowAction  int
 	_currIndex    int
@@ -88,6 +90,7 @@ func newShell(programName string, _logging bool, cmdline *CommandLine) *shell {
 		_playAlert:         true,
 		_originalSttyState: &bytes.Buffer{},
 		_prefixColor:       GenColor(ITALIC_COLORFONT, INTENSITY_COLORTYPE, CYAN_COLOR),
+		_verboseColor:      GenColor(DARK_COLORFONT, INTENSITY_COLORTYPE, GRAY_COLOR),
 		_searchPredictions: true,
 		_osHandler: osHandler{
 			
@@ -231,7 +234,8 @@ func (s *shell) run(cmdline *CommandLine) {
 		var bt = make([]byte, 1)
 		
 		if s._verbose&CLI_VERBOSE_SHELL > 0 {
-			fmt.Print("\n-->shell: Booted shell subroutine")
+			s.printVerbose("\n-->shell: Booted shell subroutine")
+			
 		}
 		
 		s.printPrefix()
@@ -261,10 +265,11 @@ func (s *shell) run(cmdline *CommandLine) {
 			}
 			
 			if s._verbose&CLI_VERBOSE_SHELL_BUFFER > 0 {
-				fmt.Print("\n-->shell: numBytes: ")
-				fmt.Println(numBytesAvailable())
-				fmt.Print("-->shell: inputbyte: ")
-				fmt.Println(bt)
+				s.printVerbose("\n-->shell: numBytes: ")
+				s.printVerbose(numBytesAvailable())
+				s.printVerbose("\n")
+				s.printVerbose("-->shell: inputbyte: ")
+				s.printVerbose(bt)
 			}
 			
 			s.handleLineBreakInput(cmdline)
@@ -301,9 +306,8 @@ func (s *shell) run(cmdline *CommandLine) {
 				//we store the actual current line before any linebreaks in s._currInput
 				
 				if s._verbose&CLI_VERBOSE_SHELL_PARSE > 0 {
-					fmt.Print("\n-->shell: Previous parseable input: ")
-					fmt.Print(s._currentInputBuffer)
-					fmt.Print("\n")
+					s.printVerbose("\n-->shell: Previous parseable input: ")
+					s.printVerbose(s._currentInputBuffer)
 				}
 				
 				if s.handleSIGINTExit(cmdline) {
@@ -327,7 +331,7 @@ func (s *shell) run(cmdline *CommandLine) {
 					fmt.Print("\n-->shell: >>> ENABLING VERBOSE MODE <<<")
 					
 					fmt.Print(COLOR_RESET)
-					cmdline._verbose |= CLI_VERBOSE_SHELL_PARSE | CLI_VERBOSE_SHELL
+					cmdline._verbose |= CLI_VERBOSE_SHELL_PARSE | CLI_VERBOSE_SHELL | CLI_VERBOSE_OS_SIG | CLI_VERBOSE_PREDICT | CLI_VERBOSE_SHELL_BUFFER
 					s._verbose |= cmdline._verbose
 				}
 				
@@ -358,7 +362,9 @@ func (s *shell) run(cmdline *CommandLine) {
 		
 		//code here is run, but sometimes the printing to the console takes longer
 		setSttyState(s._originalSttyState)
-		
+		//reset raw
+		setSttyState(bytes.NewBufferString("-raw"))
+		setSttyState(bytes.NewBufferString("-icanon"))
 		//run at exiting the scope
 		s._osHandler._wg.Add(-1)
 		
@@ -500,7 +506,7 @@ func (s *shell) handleLineBreakInput(cmdline *CommandLine) {
 	s.removePrediction()
 	
 	if s._verbose&CLI_VERBOSE_SHELL > 0 {
-		fmt.Print("\n-->shell: Registered CR")
+		s.printVerbose("\n-->shell: Registered RETURN KEY")
 	}
 	
 	if len(s._inputDisplayBuffer) > 0 {
@@ -515,8 +521,8 @@ func (s *shell) handleLineBreakInput(cmdline *CommandLine) {
 	//s._currInput = s._lastInput
 	s._inputDisplayBuffer = []Key{}
 	if cmdline._verbose&CLI_VERBOSE_SHELL > 0 {
-		fmt.Print("\n-->shell: Previous input: ")
-		fmt.Print(s._inputDisplayBuffer)
+		s.printVerbose("\n-->shell: Previous input: ")
+		s.printVerbose(s._inputDisplayBuffer)
 	}
 }
 
@@ -549,8 +555,9 @@ func (s *shell) clearCurrentLine() {
 	inputlength := s._inputDisplayBufferLength
 	
 	if s._verbose&CLI_VERBOSE_SHELL > 0 {
-		fmt.Print("\n-->shell: currentInputLength_ClearCurrLine: ")
-		fmt.Println(inputlength + s._preFixLength + s._prevPredictionFDisplayLength)
+		s.printVerbose("\n-->shell: currentInputLength_ClearCurrLine: ")
+		s.printVerbose(inputlength + s._preFixLength + s._prevPredictionFDisplayLength)
+		
 	}
 	
 	fmt.Print("\033[2K")
@@ -588,7 +595,7 @@ func (s *shell) handleKeyInput(byteInput Key, cmdline *CommandLine) {
 	fmt.Print(string(byteInput))
 	
 	if s._showBytes {
-		fmt.Println([]Key{byteInput})
+		s.printVerbose([]Key{byteInput})
 	}
 	
 	s._rtFlag = 0
@@ -649,7 +656,7 @@ func (s *shell) moveRight() {
 
 func (s *shell) debug(verbose int32, msg string) {
 	if verbose&CLI_VERBOSE_SHELL > 0 {
-		fmt.Println(msg)
+		s.printVerbose(msg)
 	}
 }
 
@@ -796,7 +803,7 @@ func (s *shell) requestSuggestionsOnTab(cmdline *CommandLine, byteInput Key) {
 	s._requestSuggestions++
 	
 	if s._requestSuggestions == 1 {
-		fmt.Print("List " + string(cmdline.numberOfSuggestions(s._parseDepth)) + " Options?\ny/n?\n")
+		fmt.Print("List " + strconv.Itoa(cmdline.numberOfSuggestions(s._parseDepth)) + " Options?\ny/n?\n")
 		s.printPrefix()
 	} else {
 		s._requestSuggestions = 1
@@ -806,16 +813,16 @@ func (s *shell) requestSuggestionsOnTab(cmdline *CommandLine, byteInput Key) {
 func (s *shell) handleSuggestions(cmdline *CommandLine) {
 	
 	if s._verbose&CLI_VERBOSE_SHELL_PARSE > 0 {
-		fmt.Print("\n-->shell: Requesting current-layer suggestions: ")
-		fmt.Print("Layer")
-		fmt.Print(s._parseDepth)
-		fmt.Print("; Request: ")
-		fmt.Println(s._requestSuggestions)
+		s.printVerbose("\n-->shell: Requesting current-layer suggestions: ")
+		s.printVerbose("Layer")
+		s.printVerbose(s._parseDepth)
+		s.printVerbose("; Request: ")
+		s.printVerbose(s._requestSuggestions)
 		
 	}
 	if s._requestSuggestions == 1 && s.yesNoConfirm() {
 		s._requestSuggestions = 0
-		fmt.Print("\nPrinting" + string(cmdline.numberOfSuggestions(s._parseDepth)) + "Options")
+		fmt.Print("\nPrinting" + strconv.Itoa(cmdline.numberOfSuggestions(s._parseDepth)) + "Options")
 		
 	}
 }
@@ -842,4 +849,11 @@ func (s *shell) clearTerminal() {
 	
 	fmt.Print("\033[2J\033[H")
 	
+}
+
+func (s *shell) printVerbose(str interface{}) {
+	
+	fmt.Print(s._verboseColor)
+	fmt.Print(str)
+	fmt.Print(COLOR_RESET)
 }

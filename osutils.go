@@ -7,21 +7,21 @@ import (
 	"strconv"
 )
 
-func numBytesAvailable() (int, error) {
+func numBytesAvailable() int {
 	cmd := exec.Command("sysctl", "-n", "kern.ipc.pts_nread")
 	var out bytes.Buffer
 	cmd.Stdout = &out
 	err := cmd.Run()
 	if err != nil {
-		return 0, err
+		return 0
 	}
 	scanner := bufio.NewScanner(&out)
 	if scanner.Scan() {
 		n, err := strconv.Atoi(scanner.Text())
 		if err != nil {
-			return 0, err
+			return 0
 		}
-		return n, nil
+		return n
 	}
-	return 0, scanner.Err()
+	return 0
 }
