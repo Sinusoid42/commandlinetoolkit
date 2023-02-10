@@ -30,9 +30,11 @@ type shell struct {
 	
 	_newestPrediction             string
 	_predictionDisplayed          bool
+	_currentPredictionAvailable   bool
 	_prevPredictionFDisplayLength int
 	_searchPredictions            bool
 	_latestFullInput              string
+	_parseDepth                   int32
 	
 	_lastInputLength int
 	_preFix          string
@@ -82,7 +84,7 @@ func newShell(programName string, _logging bool, cmdline *CommandLine) *shell {
 		_enabledHistory:    true,
 		_playAlert:         true,
 		_originalSttyState: &bytes.Buffer{},
-		_prefixColor:       CYAN,
+		_prefixColor:       COLOR_CYAN_I,
 		_searchPredictions: true,
 		_osHandler: osHandler{
 			
@@ -275,16 +277,10 @@ func (s *shell) run(cmdline *CommandLine) {
 			
 			s.iterateHistory()
 			
-			if s._searchPredictions {
-				
-				s._newestPrediction = cmdline.checkPredictions(s.latestFullInput())
-				
-				s.displayPrediction()
-			}
+			s.checkForCurrentPrediction(cmdline, byteInput)
 			
-			if s._searchPredictions && byteInput == KEY_TAB {
-				s.handleTabCompletion()
-			}
+			s.displaySuggestionsOnTab(cmdline, byteInput)
+			
 			//everything reading finished, request newline is processed and returnflag is 1
 			//if rtflag is one, we can also get the previous line input and parse it in the commandline parser
 			//shell._currInput is now the storage of  the most recent full line commandline Input that was parsed, WITHOUT the prefix
@@ -559,7 +555,16 @@ func (s *shell) handleKeyInput(byteInput Key, cmdline *CommandLine) {
 	
 	s.removePrediction()
 	
-	if byteInput == KEY_DELETE || byteInput == KEY_TAB || s.checkForArrowInput(byteInput) {
+	if byteInput == KEY_DELETE ||
+		byteInput == KEY_TAB ||
+		byteInput == KEY_ESC ||
+		s.checkForArrowInput(byteInput) {
+		return
+	}
+	
+	l := len(s._lastInput)
+	
+	if l > 0 && byteInput == KEY_SPACE && s._lastInput[l-1] == KEY_SPACE {
 		return
 	}
 	
@@ -660,7 +665,7 @@ func (s *shell) displayPrediction() {
 	
 	s._predictionDisplayed = true
 	
-	fmt.Print(ORANGE_D)
+	fmt.Print(COLOR_GRAY_D)
 	
 	fmt.Print(s._newestPrediction[q:])
 	
@@ -678,7 +683,7 @@ func (s *shell) addPreviousPrediction() {
 		return
 	}
 	
-	s._lastInput = append(s._lastInput, []Key(s._newestPrediction[q-1:])...)
+	s._lastInput = append(s._lastInput, []Key(s._newestPrediction[q:])...)
 	
 	s._predictionDisplayed = false
 	s._prevPredictionFDisplayLength = 0
@@ -708,6 +713,7 @@ func (s *shell) latestFullInput() (string, int32) {
 	l := len(s._lastInput)
 	s._latestFullInput = ""
 	if l <= 0 {
+		s._parseDepth = -1
 		return "", -1
 	} else {
 		str := ""
@@ -716,13 +722,11 @@ func (s *shell) latestFullInput() (string, int32) {
 		for i := 0; i < l; i++ {
 			c := s._lastInput[l-1-i]
 			{
-				if c == KEY_SPACE {
+				if c == KEY_SPACE && i > 0 {
 					a = false
-					// if the last key in the current line is not a space, we at least have min a one char praseable argument
-					if i < l-1 && s._lastInput[l-i] != KEY_SPACE {
-						c++
-					}
-					return str, count
+					// if the last key in the current line is not a space, we at least have min a one char praseable argument if i > 0 {
+					count++
+					
 				}
 				if a {
 					s._latestFullInput += string(c)
@@ -730,7 +734,44 @@ func (s *shell) latestFullInput() (string, int32) {
 				}
 			}
 		}
+		
+		s._parseDepth = count
+		
 		return str, count
 	}
 	return "", -1
+}
+
+func (s *shell) checkForCurrentPrediction(cmdline *CommandLine, byteInput Key) {
+	if s._searchPredictions {
+		
+		code := CLICODE(-1)
+		
+		s._newestPrediction, code = cmdline.checkPredictions(s.latestFullInput())
+		
+		s._currentPredictionAvailable = true
+		
+		if code&CLI_SUCCESS > 0 {
+			s.displayPrediction()
+			
+		} else {
+			s._currentPredictionAvailable = false
+		}
+		
+	}
+	
+	if s._searchPredictions && byteInput == KEY_TAB && s._currentPredictionAvailable {
+		
+		s.handleTabCompletion()
+	}
+}
+
+func (s *shell) displaySuggestionsOnTab(cmdline *CommandLine, byteInput Key) {
+	
+	if s._currentPredictionAvailable || byteInput != KEY_TAB {
+		return
+	}
+	
+	fmt.Println("HEHEHEHEH")
+	
 }

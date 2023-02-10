@@ -137,12 +137,21 @@ func (c *CommandLine) Wait() {
 	//os.Exit(0) //here we simulate the CTRL+C in case the syscall didnt get registered
 }
 
-func (c *CommandLine) checkPredictions(searchPrefix string, layer int32) string {
+func (c *CommandLine) checkPredictions(searchPrefix string, layer int32) (string, CLICODE) {
+	
+	if c._verbose&CLI_VERBOSE_PREDICT > 0 {
+		
+		fmt.Print(COLOR_RED_I)
+		
+		fmt.Print("\n-->CLI-Layer: ")
+		fmt.Println(layer)
+		
+		fmt.Print(COLOR_RESET)
+	}
 	
 	// check available commands in the corresponding layer
 	if len(searchPrefix) == 1 && searchPrefix[0] == 'a' {
-		return "tabcompletion"
+		return "tabcompletion", CLI_SUCCESS
 	}
-	return ""
-	
+	return "", CLI_NO_PREDICTION_ERROR
 }

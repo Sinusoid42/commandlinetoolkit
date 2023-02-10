@@ -6,6 +6,8 @@ var KEY_DELETE = Key(127)
 
 var KEY_LF = Key(13)
 
+var KEY_ESC = Key(27)
+
 var KEY_RETURN = Key(10)
 
 var KEY_SPACE = Key(32)
