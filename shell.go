@@ -704,24 +704,33 @@ func (s *shell) clearKeys(n int) {
 	}
 }
 
-func (s *shell) latestFullInput() string {
+func (s *shell) latestFullInput() (string, int32) {
 	l := len(s._lastInput)
 	s._latestFullInput = ""
 	if l <= 0 {
-		return ""
+		return "", -1
 	} else {
 		str := ""
+		a := true
+		count := int32(0)
 		for i := 0; i < l; i++ {
 			c := s._lastInput[l-1-i]
 			{
 				if c == KEY_SPACE {
-					return str
+					a = false
+					// if the last key in the current line is not a space, we at least have min a one char praseable argument
+					if i < l-1 && s._lastInput[l-i] != KEY_SPACE {
+						c++
+					}
+					return str, count
 				}
-				s._latestFullInput += string(c)
-				str += string(c)
+				if a {
+					s._latestFullInput += string(c)
+					str += string(c)
+				}
 			}
 		}
-		return str
+		return str, count
 	}
-	return ""
+	return "", -1
 }

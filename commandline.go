@@ -137,7 +137,7 @@ func (c *CommandLine) Wait() {
 	//os.Exit(0) //here we simulate the CTRL+C in case the syscall didnt get registered
 }
 
-func (c *CommandLine) checkPredictions(searchPrefix string) string {
+func (c *CommandLine) checkPredictions(searchPrefix string, layer int32) string {
 	
 	// check available commands in the corresponding layer
 	if len(searchPrefix) == 1 && searchPrefix[0] == 'a' {
