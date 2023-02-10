@@ -9,13 +9,17 @@ import (
 //for a command line to work we need the possibility of parsing a non cyclic directed, n-dimensional tree from arguments that follow conditionally
 //either by setting the paramters required or not,
 
+//const
+var VERSION = "0.0.5"
+
 type CommandLine struct {
+	
+	//here we have the commandline current parsetree
 	_rootArgument *Argument
 	
 	//either provided with the json
-	_programName string
 	
-	_program string //a string defining the json file from this command line, can be stored using framework commands using --storeCLI <filename>
+	_program *program
 	
 	/*
 		The parsers job is to traverse the parse tree (Parsing Explained - Computerphile 13.11.2019)
@@ -23,7 +27,7 @@ type CommandLine struct {
 		and the parsers job is to make sure either the input is error checked, well formattet,
 		in case of callbacks that those are called and that options/parameters are jumped correctly
 	*/
-	_parser parser
+	_parser *parser
 	
 	/*
 		the builder creates the argument tree from the provided json or programmed input
@@ -33,7 +37,7 @@ type CommandLine struct {
 			//they are reserved for either running the commandline within an own shell or printing the dynamically build short or full help menu
 	
 	*/
-	_builder builder
+	_builder *builder
 	
 	_runtimeCodes CLICODE
 	/*
@@ -61,7 +65,7 @@ func NewCommandLine() *CommandLine {
 	
 	cli := &CommandLine{
 		_parser:  newparser(),
-		_program: DefaultCommandLineTemplate(),
+		_program: newprogram(),
 		_verbose: 0,
 	}
 	
@@ -76,7 +80,7 @@ func (c *CommandLine) ReadJSON(path string) {
 func (c *CommandLine) Rebuild() CLICODE {
 	c.Clear()
 	
-	c._builder.Rebuild(c._program, c)
+	c._builder.Rebuild(c)
 	
 	return CLI_SUCCESS
 }
@@ -106,7 +110,7 @@ func (c *CommandLine) Parse(args []string) CLICODE {
 	
 	//either we have the programname from the executeable by running or from the json file provided
 	
-	c._shell = newShell(c._programName, c._logging, c)
+	c._shell = newShell(c._program._programName, c._logging, c)
 	
 	fmt.Println("DONE:..")
 	
@@ -128,7 +132,7 @@ func (c *CommandLine) Wait() {
 	c._shell._osHandler._wg.Wait()
 	
 	//reset the original bash
-	setSttyState(&(originalSttyState))
+	setSttyState(c._shell._originalSttyState)
 	//dont need it anymore
 	//os.Exit(0) //here we simulate the CTRL+C in case the syscall didnt get registered
 }

@@ -6,7 +6,7 @@ import `encoding/json`
 type builder struct {
 }
 
-func (b *builder) Rebuild(programJson string, c *CommandLine) {
+func (b *builder) Rebuild(c *CommandLine) {
 
 }
 
