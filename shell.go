@@ -308,22 +308,7 @@ func (s *shell) run(cmdline *CommandLine) {
 				if s._verbose&CLI_VERBOSE_SHELL_PARSE > 0 {
 					s.printVerbose("\n-->shell: Previous parseable input: ")
 					s.printVerbose(s._currentInputBuffer)
-					sr := "["
-					for _, i := range s._currentInputBuffer {
-						if i == KEY_ESC {
-							sr += " ESC,"
-						} else if i == KEY_DELETE {
-							sr += " DEL,"
-						} else {
-							sr += "" + string(i) + ", "
-						}
-					}
-					l := len(sr)
-					if l > 1 {
-						sr = sr[:l-2]
-					}
-					sr += "]"
-					s.printVerbose(sr)
+					s.printVerboseBuffer()
 				}
 				
 				if s.handleSIGINTExit(cmdline) {
@@ -693,6 +678,9 @@ func (s *shell) reprintCurrentLine() {
 	s._inputDisplayBufferLength = len(s._inputDisplayBuffer)
 }
 
+/**
+Displays a possible completion prediction
+*/
 func (s *shell) displayPrediction() {
 	
 	l := len(s._newestPrediction)
@@ -715,6 +703,9 @@ func (s *shell) displayPrediction() {
 	fmt.Print(COLOR_RESET)
 }
 
+/**
+Adds the previously displayewd Tab completion prediction to the current input string buffer
+*/
 func (s *shell) addPreviousPrediction() {
 	
 	l := len(s._newestPrediction)
@@ -735,6 +726,10 @@ func (s *shell) addPreviousPrediction() {
 	s.reprintCurrentLine()
 }
 
+/**
+Removes a current Prediction and reprints the current displayed line with the most recent entered buffer,
+if arrows were used, the buffer is emnpty
+*/
 func (s *shell) removePrediction() {
 	if !s._searchPredictions {
 		return
@@ -746,6 +741,9 @@ func (s *shell) removePrediction() {
 	s._predictionDisplayed = false
 }
 
+/**
+Clears n-Keys
+*/
 func (s *shell) clearKeys(n int) {
 	
 	for i := 0; i < n; i++ {
@@ -753,6 +751,9 @@ func (s *shell) clearKeys(n int) {
 	}
 }
 
+/**
+Returns the last valid subword before a given Spacebar from the current inputbuffer that was not entered yet
+*/
 func (s *shell) latestFullInput() (string, int32) {
 	l := len(s._inputDisplayBuffer)
 	s._latestFullWord = ""
@@ -786,6 +787,11 @@ func (s *shell) latestFullInput() (string, int32) {
 	return "", -1
 }
 
+/**
+Checks on every Key enter a possible current prediction based on the current output
+If more match with a given substring displays only the first hit
+WIll also be the same on TAB complete
+*/
 func (s *shell) checkForCurrentPrediction(cmdline *CommandLine, byteInput Key) {
 	if s._searchPredictions {
 		
@@ -809,6 +815,9 @@ func (s *shell) checkForCurrentPrediction(cmdline *CommandLine, byteInput Key) {
 	}
 }
 
+/**
+Creates a UserInterfaceInteraction Request when pressing TAB
+*/
 func (s *shell) requestSuggestionsOnTab(cmdline *CommandLine, byteInput Key) {
 	
 	if s._currentPredictionAvailable || byteInput != KEY_TAB {
@@ -826,6 +835,10 @@ func (s *shell) requestSuggestionsOnTab(cmdline *CommandLine, byteInput Key) {
 	}
 	
 }
+
+/**
+Helps displaying all possible suggestions for a given VALID parse tree layer
+*/
 func (s *shell) handleSuggestions(cmdline *CommandLine) {
 	
 	if s._verbose&CLI_VERBOSE_SHELL_PARSE > 0 {
@@ -843,6 +856,10 @@ func (s *shell) handleSuggestions(cmdline *CommandLine) {
 	}
 }
 
+/**
+Registers a 'y' or 'Y' confirm for a given Inputquestion
+Returns true or false
+*/
 func (s *shell) yesNoConfirm() bool {
 	
 	if len(s._currentInputBuffer) < 1 || len(s._currentInputBuffer) > 1 {
@@ -861,6 +878,9 @@ func (s *shell) yesNoConfirm() bool {
 	
 }
 
+/**
+Clears the current Terminal Window
+*/
 func (s *shell) clearTerminal() {
 	
 	fmt.Print("\033[2J\033[H")
@@ -874,4 +894,28 @@ func (s *shell) printVerbose(str interface{}) {
 	fmt.Print(s._verboseColor)
 	fmt.Print(str)
 	fmt.Print(COLOR_RESET)
+}
+
+/**
+Prints the current input buffer with spaces, in debug mode
+*/
+func (s *shell) printVerboseBuffer() {
+	
+	sr := "["
+	for _, i := range s._currentInputBuffer {
+		if i == KEY_ESC {
+			sr += " ESC,"
+		} else if i == KEY_DELETE {
+			sr += " DEL,"
+		} else {
+			sr += "" + string(i) + ", "
+		}
+	}
+	l := len(sr)
+	if l > 1 {
+		sr = sr[:l-2]
+	}
+	sr += "]"
+	s.printVerbose(sr)
+	
 }
