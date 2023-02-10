@@ -153,5 +153,16 @@ func (c *CommandLine) checkPredictions(searchPrefix string, layer int32) (string
 	if len(searchPrefix) == 1 && searchPrefix[0] == 'a' {
 		return "tabcompletion", CLI_SUCCESS
 	}
+	
+	if len(searchPrefix) == 1 && searchPrefix[0] == 'c' {
+		return "clear", CLI_SUCCESS
+	}
+	
 	return "", CLI_NO_PREDICTION_ERROR
+}
+
+func (c *CommandLine) numberOfSuggestions(layer int32) int {
+	
+	return 69
+	
 }
