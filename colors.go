@@ -38,7 +38,6 @@ func GenColor(fontType string, colType string, color string) Color {
 
 }
 
-// TODO
 var COLOR_BLACK = Color(COLOR_HEADER + "0;30m")
 var COLOR_BLACK_L = Color(COLOR_HEADER + "1;30m")
 var COLOR_BLACK_D = Color(COLOR_HEADER + "2;30m")

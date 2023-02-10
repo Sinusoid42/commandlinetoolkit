@@ -308,6 +308,22 @@ func (s *shell) run(cmdline *CommandLine) {
 				if s._verbose&CLI_VERBOSE_SHELL_PARSE > 0 {
 					s.printVerbose("\n-->shell: Previous parseable input: ")
 					s.printVerbose(s._currentInputBuffer)
+					sr := "["
+					for _, i := range s._currentInputBuffer {
+						if i == KEY_ESC {
+							sr += " ESC,"
+						} else if i == KEY_DELETE {
+							sr += " DEL,"
+						} else {
+							sr += "" + string(i) + ", "
+						}
+					}
+					l := len(sr)
+					if l > 1 {
+						sr = sr[:l-2]
+					}
+					sr += "]"
+					s.printVerbose(sr)
 				}
 				
 				if s.handleSIGINTExit(cmdline) {
@@ -851,8 +867,10 @@ func (s *shell) clearTerminal() {
 	
 }
 
+/**
+Prints with the verbose color overlay
+*/
 func (s *shell) printVerbose(str interface{}) {
-	
 	fmt.Print(s._verboseColor)
 	fmt.Print(str)
 	fmt.Print(COLOR_RESET)

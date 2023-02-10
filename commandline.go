@@ -55,7 +55,8 @@ type CommandLine struct {
 	_options int32
 	
 	//run in verbose mode
-	_verbose int32
+	_verbose      int32
+	_verboseColor Color
 	
 	//the interactive shell
 	_shell *shell
@@ -64,9 +65,10 @@ type CommandLine struct {
 func NewCommandLine() *CommandLine {
 	
 	cli := &CommandLine{
-		_parser:  newparser(),
-		_program: newprogram(),
-		_verbose: 0,
+		_parser:       newparser(),
+		_program:      newprogram(),
+		_verbose:      0,
+		_verboseColor: COLOR_RED_I,
 	}
 	
 	cli.Rebuild()
@@ -141,12 +143,9 @@ func (c *CommandLine) checkPredictions(searchPrefix string, layer int32) (string
 	
 	if c._verbose&CLI_VERBOSE_PREDICT > 0 {
 		
-		fmt.Print(COLOR_RED_I)
+		c.printVerbose("\n-->CLI: Layer: ")
+		c.printVerbose(layer)
 		
-		fmt.Print("\n-->CLI-Layer: ")
-		fmt.Println(layer)
-		
-		fmt.Print(COLOR_RESET)
 	}
 	
 	// check available commands in the corresponding layer
@@ -165,4 +164,13 @@ func (c *CommandLine) numberOfSuggestions(layer int32) int {
 	
 	return 69
 	
+}
+
+/**
+Prints with the verbose color overlay
+*/
+func (c *CommandLine) printVerbose(str interface{}) {
+	fmt.Print(c._verboseColor)
+	fmt.Print(str)
+	fmt.Print(COLOR_RESET)
 }
