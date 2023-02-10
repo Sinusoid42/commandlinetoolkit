@@ -25,13 +25,20 @@ type shell struct {
 	_previnputs [][]Key
 	
 	//stores the prev input
-	_currInput       []Key
-	_lastInput       []Key
+	_currInput []Key
+	_lastInput []Key
+	
+	_newestPrediction             string
+	_predictionDisplayed          bool
+	_prevPredictionFDisplayLength int
+	_searchPredictions            bool
+	_latestFullInput              string
+	
 	_lastInputLength int
 	_preFix          string
 	_prefixColor     Color
 	
-	_action       int
+	_arrowAction  int
 	_currIndex    int
 	_rtFlag       int
 	_exit         int
@@ -66,7 +73,7 @@ func newShell(programName string, _logging bool, cmdline *CommandLine) *shell {
 		//use the default unix/linux keyboardInterrupt
 		
 		//logging
-		_logging:           true,
+		_logging:           false,
 		_exit:              0,
 		_currIndex:         0,
 		_previnputs:        [][]Key{},
@@ -76,6 +83,7 @@ func newShell(programName string, _logging bool, cmdline *CommandLine) *shell {
 		_playAlert:         true,
 		_originalSttyState: &bytes.Buffer{},
 		_prefixColor:       CYAN,
+		_searchPredictions: true,
 		_osHandler: osHandler{
 			
 			_sysCallInterrupt: syscall.SIGINT,
@@ -205,7 +213,7 @@ func (s *shell) run(cmdline *CommandLine) {
 	s._lastInput = []Key{}
 	s._currInput = []Key{}
 	
-	s._action = -1
+	s._arrowAction = -1
 	s._rtFlag = 0
 	//lastByte := byte(0)
 	
@@ -236,6 +244,7 @@ func (s *shell) run(cmdline *CommandLine) {
 				s._rtFlag (shell.returnFlag)
 				Store Inputs, reset current new input
 			*/
+			s._arrowAction = 0
 			if byteInput == KEY_RETURN {
 				
 				s._rtFlag = 1
@@ -256,8 +265,6 @@ func (s *shell) run(cmdline *CommandLine) {
 			//check for arrow input
 			//handle arrow UP
 			
-			s._action = 0
-			
 			s.handleArrowUp(cmdline)
 			
 			//handle arrow down
@@ -268,6 +275,16 @@ func (s *shell) run(cmdline *CommandLine) {
 			
 			s.iterateHistory()
 			
+			if s._searchPredictions {
+				
+				s._newestPrediction = cmdline.checkPredictions(s.latestFullInput())
+				
+				s.displayPrediction()
+			}
+			
+			if s._searchPredictions && byteInput == KEY_TAB {
+				s.handleTabCompletion()
+			}
 			//everything reading finished, request newline is processed and returnflag is 1
 			//if rtflag is one, we can also get the previous line input and parse it in the commandline parser
 			//shell._currInput is now the storage of  the most recent full line commandline Input that was parsed, WITHOUT the prefix
@@ -330,7 +347,7 @@ func (s *shell) run(cmdline *CommandLine) {
 }
 
 func (s *shell) iterateHistory() {
-	if s._enabledHistory && (s._action == 1 || s._action == 2) {
+	if s._enabledHistory && (s._arrowAction == 2 || s._arrowAction == 3) {
 		linputs := len(s._previnputs)
 		
 		if s._currIndex >= 0 && linputs > s._currIndex {
@@ -358,13 +375,15 @@ func (s *shell) iterateHistory() {
 				fmt.Print("\a")
 			}
 		}
-		s.printCurrentLine()
+		s.reprintCurrentLine()
 	}
 }
 
 func (s *shell) handleArrowDown(cmdline *CommandLine) {
-	l := len(s._lastInput)
-	if l > 2 && s._lastInput[l-3] == 27 && s._lastInput[l-2] == 91 && s._lastInput[l-1] == 66 {
+	//l := len(s._lastInput)
+	//if l > 2 && s._lastInput[l-3] == 27 && s._lastInput[l-2] == 91 && s._lastInput[l-1] == 66 {
+	
+	if s._arrowAction == 2 {
 		
 		// "\033[F"
 		
@@ -372,8 +391,9 @@ func (s *shell) handleArrowDown(cmdline *CommandLine) {
 		//remove the arrow bytes from the buffer
 		
 		s._lastInputLength = len(s._lastInput)
+		s.removePrediction()
 		
-		s.removeArrowKeyStrokeFromBuffer()
+		//s.removeArrowKeyStrokeFromBuffer()
 		
 		s.clearCurrentLine()
 		
@@ -390,20 +410,20 @@ func (s *shell) handleArrowDown(cmdline *CommandLine) {
 			s.printPrefix()
 		}
 		
-		s._action = 2
 	}
 }
 
 func (s *shell) handleArrowUp(cmdline *CommandLine) {
-	l := len(s._lastInput)
-	if l > 2 && s._lastInput[l-3] == 27 && s._lastInput[l-2] == 91 && s._lastInput[l-1] == 65 {
-		
+	//l := len(s._lastInput)
+	//if l > 2 && s._lastInput[l-3] == 27 && s._lastInput[l-2] == 91 && s._lastInput[l-1] == 65 {
+	if s._arrowAction == 3 {
 		//fmt.Print("\n") //keep the cursor in the line
 		//remove the arrow bytes from the buffer
 		
 		s._lastInputLength = len(s._lastInput)
+		s.removePrediction()
 		
-		s.removeArrowKeyStrokeFromBuffer()
+		//s.removeArrowKeyStrokeFromBuffer()
 		
 		//clear the current line
 		
@@ -417,7 +437,6 @@ func (s *shell) handleArrowUp(cmdline *CommandLine) {
 		//s.moveRight()
 		
 		s._currIndex++
-		s._action = 1
 	}
 }
 
@@ -474,6 +493,8 @@ func (s *shell) handleLineBreakInput(cmdline *CommandLine) {
 		return
 	}
 	
+	s.removePrediction()
+	
 	if cmdline._verbose&CLI_VERBOSE_SHELL > 0 {
 		fmt.Print("\n-->shell: Registered CR")
 	}
@@ -496,43 +517,53 @@ func (s *shell) handleLineBreakInput(cmdline *CommandLine) {
 }
 
 func (s *shell) handleDelete(byteInput Key) {
+	l := len(s._lastInput)
 	//handle a delete in the same line
-	if byteInput == KEY_DELETE {
-		//remove last char
-		s._lastInput = s._lastInput[:len(s._lastInput)-1]
+	if byteInput == KEY_DELETE && l > 0 {
 		
+		s._lastInput = s._lastInput[:l-1]
+		
+		if s._predictionDisplayed {
+			s.removePrediction()
+		} else {
+			s.reprintCurrentLine()
+		}
+		//remove last char
 		//replace char sequence in the current terminal line with empty string
 		
-		s.clearCurrentLine()
-		
 		//fill it back up from the beginning with full chars up to n-1
-		
-		s.printPrefix()
-		
-		s.printCurrentLine()
 		
 	}
 }
 
+func (s *shell) handleTabCompletion() {
+	s.reprintCurrentLine()
+	s.addPreviousPrediction()
+	
+}
+
 func (s *shell) clearCurrentLine() {
+	s._lastInputLength = len(s._lastInput)
 	inputlength := s._lastInputLength
 	fmt.Print("\r")
-	for i := 0; i < inputlength+s._preFixLength+4; i++ {
-		fmt.Print(" ")
+	for i := 0; i < inputlength+s._preFixLength+1+len(s._newestPrediction); i++ {
+		fmt.Print("  ")
 	}
-	
+	s._lastInputLength = 0
 	fmt.Print("\r")
-	
 	fmt.Print("\u001b[{n}")
 	
 }
 
 func (s *shell) handleKeyInput(byteInput Key, cmdline *CommandLine) {
 	
-	if !s.inputWasArrow(byteInput) {
-		fmt.Print(string(byteInput))
-		
+	s.removePrediction()
+	
+	if byteInput == KEY_DELETE || byteInput == KEY_TAB || s.checkForArrowInput(byteInput) {
+		return
 	}
+	
+	fmt.Print(string(byteInput))
 	
 	if s._showBytes {
 		fmt.Println([]Key{byteInput})
@@ -540,6 +571,12 @@ func (s *shell) handleKeyInput(byteInput Key, cmdline *CommandLine) {
 	
 	s._rtFlag = 0
 	s._lastInput = append(s._lastInput, byteInput)
+	
+	s._predictionDisplayed = false
+	s._prevPredictionFDisplayLength = 0
+	
+	s._lastInputLength = len(s._lastInput)
+	
 }
 
 func (s *shell) checkForArrow() bool {
@@ -547,7 +584,7 @@ func (s *shell) checkForArrow() bool {
 	return false
 }
 
-func (s *shell) inputWasArrow(keyInput Key) bool {
+func (s *shell) checkForArrowInput(keyInput Key) bool {
 	
 	//remove the arrow input
 	
@@ -561,6 +598,14 @@ func (s *shell) inputWasArrow(keyInput Key) bool {
 		keyInput == ARROW_LEFT[2] ||
 		keyInput == ARROW_RIGHT[2]) && (
 		s._lastInput[l-1] == ARROW_UP[1] && s._lastInput[l-2] == ARROW_UP[0]) {
+		
+		//action 0 is button left
+		//action 1 is button right
+		//action 2 is button down
+		//action 3 is button up
+		
+		s._arrowAction = 68 - int(keyInput)
+		
 		return true
 	}
 	
@@ -568,6 +613,7 @@ func (s *shell) inputWasArrow(keyInput Key) bool {
 }
 
 func (s *shell) printPrefix() {
+	fmt.Print("\r")
 	fmt.Print(s._prefixColor)
 	fmt.Print("\r")
 	fmt.Print(s._preFix)
@@ -588,9 +634,94 @@ func (s *shell) removeArrowKeyStrokeFromBuffer() {
 	l := len(s._lastInput)
 	if l > 2 {
 		s._lastInput = s._lastInput[0 : l-3]
+		
+		s._lastInputLength = len(s._lastInput)
 	}
 }
 
-func (s *shell) printCurrentLine() {
+func (s *shell) reprintCurrentLine() {
+	s.clearCurrentLine()
+	s.printPrefix()
 	fmt.Print(string(s._lastInput))
+}
+
+func (s *shell) displayPrediction() {
+	
+	l := len(s._newestPrediction)
+	q := len(s._latestFullInput)
+	k := l - q - 1
+	
+	if k <= 0 {
+		s._prevPredictionFDisplayLength = 0
+		return
+	}
+	
+	s._prevPredictionFDisplayLength = k
+	
+	s._predictionDisplayed = true
+	
+	fmt.Print(ORANGE_D)
+	
+	fmt.Print(s._newestPrediction[q:])
+	
+	fmt.Print(COLOR_RESET)
+}
+
+func (s *shell) addPreviousPrediction() {
+	
+	l := len(s._newestPrediction)
+	q := len(s._latestFullInput)
+	k := l - q - 1
+	
+	if k <= 0 {
+		s._prevPredictionFDisplayLength = 0
+		return
+	}
+	
+	s._lastInput = append(s._lastInput, []Key(s._newestPrediction[q-1:])...)
+	
+	s._predictionDisplayed = false
+	s._prevPredictionFDisplayLength = 0
+	s._newestPrediction = ""
+	
+	s.reprintCurrentLine()
+}
+
+func (s *shell) removePrediction() {
+	if !s._searchPredictions {
+		return
+	}
+	s._lastInputLength = len(s._lastInput)
+	s.clearKeys(len(s._newestPrediction) + s._lastInputLength)
+	s.reprintCurrentLine()
+	s._predictionDisplayed = false
+}
+
+func (s *shell) clearKeys(n int) {
+	
+	for i := 0; i < n; i++ {
+		fmt.Print("\b")
+	}
+}
+
+func (s *shell) latestFullInput() string {
+	l := len(s._lastInput)
+	s._latestFullInput = ""
+	if l <= 0 {
+		return ""
+	} else {
+		str := ""
+		for i := 0; i < l; i++ {
+			c := s._lastInput[l-1-i]
+			{
+				if c == KEY_SPACE {
+					return str
+				}
+				s._latestFullInput += string(c)
+				str += string(c)
+			}
+		}
+		return str
+	}
+	return ""
 }

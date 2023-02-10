@@ -8,6 +8,10 @@ var KEY_LF = Key(13)
 
 var KEY_RETURN = Key(10)
 
+var KEY_SPACE = Key(32)
+
+var KEY_TAB = Key(9)
+
 var ARROW_UP = []Key{Key(27), Key(91), Key(65)}
 var ARROW_DOWN = []Key{Key(27), Key(91), Key(66)}
 var ARROW_LEFT = []Key{Key(27), Key(91), Key(68)}

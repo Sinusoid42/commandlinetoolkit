@@ -136,3 +136,13 @@ func (c *CommandLine) Wait() {
 	//dont need it anymore
 	//os.Exit(0) //here we simulate the CTRL+C in case the syscall didnt get registered
 }
+
+func (c *CommandLine) checkPredictions(searchPrefix string) string {
+	
+	// check available commands in the corresponding layer
+	if len(searchPrefix) == 1 && searchPrefix[0] == 'a' {
+		return "tabcompletion"
+	}
+	return ""
+	
+}
