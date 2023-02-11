@@ -43,7 +43,8 @@ type CommandLine struct {
 	/*
 		creates a .clihistory text file
 	*/
-	_logging bool
+	_logging    bool
+	_usehistory bool
 	
 	//available arguments in total
 	_size int32
@@ -67,6 +68,7 @@ func NewCommandLine() *CommandLine {
 	cli := &CommandLine{
 		_parser:       newparser(),
 		_program:      newprogram(),
+		_usehistory:   true,
 		_verbose:      0,
 		_verboseColor: COLOR_RED_I,
 	}
@@ -108,13 +110,13 @@ func (c *CommandLine) Parse(args []string) CLICODE {
 	
 	//go c.runInteractive()
 	
-	fmt.Println("DOING THE PARSING AND BLABLABLA")
+	//fmt.Println("DOING THE PARSING AND BLABLABLA")
 	
 	//either we have the programname from the executeable by running or from the json file provided
 	
-	c._shell = newShell(c._program._programName, c._logging, c)
+	c._shell = newShell(c._program._programName, c._logging, c._usehistory, c)
 	
-	fmt.Println("DONE:..")
+	//fmt.Println("DONE:..")
 	
 	c._shell.run(c)
 	return CLI_SUCCESS

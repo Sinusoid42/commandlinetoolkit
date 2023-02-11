@@ -23,11 +23,20 @@ import (
 
 //the shell struct
 type shell struct {
-	_previnputs [][]Key
+	
+	//store the string file name for a local hidden .history file
+	_historyFileHandler *historyHandler
+	_enabledHistoryFile bool
+	_previnputs         [][]Key
+	
+	_inputDisplayBuffer       []Key
+	_inputDisplayBufferLength int
+	_parseDepth               int32
+	_consumed                 bool
+	
+	_currentInputBuffer []Key
 	
 	//stores the prev input
-	_currentInputBuffer []Key
-	_inputDisplayBuffer []Key
 	
 	_newestPrediction             string
 	_predictionDisplayed          bool
@@ -35,15 +44,12 @@ type shell struct {
 	_prevPredictionFDisplayLength int
 	_searchPredictions            bool
 	_latestFullWord               string
-	_parseDepth                   int32
+	_requestSuggestions           bool
 	
-	_requestSuggestions int
+	_prefixColor  Color
+	_verboseColor Color
 	
-	_inputDisplayBufferLength int
-	_preFix                   string
-	_prefixColor              Color
-	_verboseColor             Color
-	
+	_preFix       string
 	_arrowAction  int
 	_currIndex    int
 	_rtFlag       int
@@ -58,7 +64,7 @@ type shell struct {
 	_logging bool
 	_verbose int32
 	
-	_osHandler osHandler
+	_osHandler *osHandler
 	
 	_originalSttyState *bytes.Buffer
 }
@@ -75,29 +81,46 @@ type osHandler struct {
 }
 
 //create a new shell
-func newShell(programName string, _logging bool, cmdline *CommandLine) *shell {
+func newShell(_programName string, _logging bool, _usehistory bool, cmdline *CommandLine) *shell {
 	s := &shell{
 		//use the default unix/linux keyboardInterrupt
-		
 		//logging
-		_logging:           false,
-		_exit:              0,
-		_currIndex:         0,
-		_previnputs:        [][]Key{},
-		_preFix:            ">>>",
-		_preFixLength:      3,
-		_enabledHistory:    true,
-		_playAlert:         true,
-		_originalSttyState: &bytes.Buffer{},
-		_prefixColor:       GenColor(ITALIC_COLORFONT, INTENSITY_COLORTYPE, CYAN_COLOR),
-		_verboseColor:      GenColor(DARK_COLORFONT, INTENSITY_COLORTYPE, GRAY_COLOR),
-		_searchPredictions: true,
-		_osHandler: osHandler{
+		_exit:               0,
+		_currIndex:          0,
+		_previnputs:         [][]Key{},
+		_preFix:             ">>>",
+		_preFixLength:       3,
+		_enabledHistory:     true,
+		_enabledHistoryFile: _usehistory,
+		_logging:            _logging,
+		_playAlert:          true,
+		_consumed:           true,
+		_originalSttyState:  &bytes.Buffer{},
+		_prefixColor:        GenColor(ITALIC_COLORFONT, INTENSITY_COLORTYPE, CYAN_COLOR),
+		_verboseColor:       GenColor(DARK_COLORFONT, INTENSITY_COLORTYPE, GRAY_COLOR),
+		_searchPredictions:  true,
+		_osHandler: &osHandler{
 			
 			_sysCallInterrupt: syscall.SIGINT,
 			//most recent syscall input
 			_sysCall: 0,
 		},
+	}
+	
+	if s._enabledHistoryFile {
+		
+		//logging is debug information in the shell log
+		//is being stored with prefix flag, so the debug information is not rendered back into the shell ubon loading
+		
+		s._historyFileHandler = newHistoryFileHandler(_programName)
+		
+		keys_history := s._historyFileHandler._bufferedLines
+		
+		if len(keys_history) > 0 {
+			s._previnputs = s._historyFileHandler._keyLines
+			s._currIndex = -1
+		}
+		
 	}
 	
 	s.registerSystemSignalCallbacks(cmdline)
@@ -323,27 +346,42 @@ func (s *shell) run(cmdline *CommandLine) {
 				
 				if string(s._currentInputBuffer) == "test" {
 					fmt.Print("\nHAHA")
+					
 				}
 				
 				if string(s._currentInputBuffer) == "verbose" {
 					
 					fmt.Print(COLOR_PINK_IBG)
 					
-					fmt.Print("\n-->shell: >>> ENABLING VERBOSE MODE <<<")
+					fmt.Print("\n-->shell: >>> START SHELL VERBOSE MODE <<<")
 					
 					fmt.Print(COLOR_RESET)
 					cmdline._verbose |= CLI_VERBOSE_SHELL_PARSE | CLI_VERBOSE_SHELL | CLI_VERBOSE_OS_SIG | CLI_VERBOSE_PREDICT | CLI_VERBOSE_SHELL_BUFFER
 					s._verbose |= cmdline._verbose
+					
 				}
 				
 				if string(s._currentInputBuffer) == "!verbose" {
-					fmt.Print("\n-->shell: Disabling verbose mode")
+					
+					fmt.Print(COLOR_PINK_IBG)
+					
+					fmt.Print("\n-->shell: >>> END SHELL VERBOSE MODE <<<")
+					
+					fmt.Print(COLOR_RESET)
+					
 					cmdline._verbose = 0
 					s._verbose = cmdline._verbose
+					
 				}
 				
 				if string(s._currentInputBuffer) == "clear" {
 					s.clearTerminal()
+					
+				}
+				
+				if s._inputDisplayBufferLength > 0 && !s._consumed {
+					
+					s._historyFileHandler.append(string(s._currentInputBuffer))
 					
 				}
 				
@@ -361,20 +399,37 @@ func (s *shell) run(cmdline *CommandLine) {
 			}
 		}
 		
-		//code here is run, but sometimes the printing to the console takes longer
-		setSttyState(s._originalSttyState)
-		//reset raw
-		setSttyState(bytes.NewBufferString("-raw"))
-		setSttyState(bytes.NewBufferString("-icanon"))
-		//run at exiting the scope
-		s._osHandler._wg.Add(-1)
+		s.exit()
 		
-		os.Exit(0)
 	}
 	go sh()
 	
 }
 
+func (s *shell) exit() {
+	//code here is run, but sometimes the printing to the console takes longer
+	setSttyState(s._originalSttyState)
+	//reset raw
+	setSttyState(bytes.NewBufferString("-raw"))
+	setSttyState(bytes.NewBufferString("-icanon"))
+	//run at exiting the scope
+	s._osHandler._wg.Add(-1)
+	
+	if s._enabledHistoryFile {
+		
+		s._historyFileHandler.close()
+		
+	}
+	
+	os.Exit(0)
+}
+
+/**
+Iterate the previous history in the present shell
+
+TODO
+Add serializing and dezerialising inputs from the previous history
+*/
 func (s *shell) iterateHistory() {
 	if s._enabledHistory && (s._arrowAction == 2 || s._arrowAction == 3) {
 		linputs := len(s._previnputs)
@@ -408,6 +463,9 @@ func (s *shell) iterateHistory() {
 	}
 }
 
+/**
+Process the input, when a arrow up action is present
+*/
 func (s *shell) handleArrowDown(cmdline *CommandLine) {
 	//l := len(s._lastInput)
 	//if l > 2 && s._lastInput[l-3] == 27 && s._lastInput[l-2] == 91 && s._lastInput[l-1] == 66 {
@@ -442,6 +500,9 @@ func (s *shell) handleArrowDown(cmdline *CommandLine) {
 	}
 }
 
+/**
+Process the input, when a arrow up action is present
+*/
 func (s *shell) handleArrowUp(cmdline *CommandLine) {
 	//l := len(s._lastInput)
 	//if l > 2 && s._lastInput[l-3] == 27 && s._lastInput[l-2] == 91 && s._lastInput[l-1] == 65 {
@@ -469,11 +530,16 @@ func (s *shell) handleArrowUp(cmdline *CommandLine) {
 	}
 }
 
+/**
+Handles the exit when CTRL+C for unix/linux Keyboard Interrupt
+*/
 func (s *shell) handleSIGINTExit(cmdline *CommandLine) bool {
 	if s._osHandler._sysCall == syscall.SIGINT {
 		
 		//maybe the user entered y|Y as first char
 		if s.yesNoConfirm() {
+			
+			s._consumed = true
 			
 			fmt.Println("\nExit 0")
 			
@@ -499,6 +565,11 @@ func (s *shell) handleSIGINTExit(cmdline *CommandLine) bool {
 	return false
 }
 
+/**
+	Transfer the parseable inputstring from the current commandline into a second application buffer
+that can be read from outside or callbacks can be fired for
+(need to register callback functions)
+*/
 func (s *shell) handleLineBreakInput(cmdline *CommandLine) {
 	if s._rtFlag != 1 {
 		return
@@ -527,6 +598,9 @@ func (s *shell) handleLineBreakInput(cmdline *CommandLine) {
 	}
 }
 
+/**
+Handles the deletion from a given previous character if valid and byteInput was 127
+*/
 func (s *shell) handleDelete(byteInput Key) {
 	l := len(s._inputDisplayBuffer)
 	//handle a delete in the same line
@@ -545,12 +619,17 @@ func (s *shell) handleDelete(byteInput Key) {
 	}
 }
 
+/**
+Bundle Function to reprint the current line from a given inpput and add the previously recieved prediction from the parse tree
+*/
 func (s *shell) handleTabCompletion() {
 	s.reprintCurrentLine()
 	s.addPreviousPrediction()
-	
 }
 
+/**
+clear the current line within the active shell
+*/
 func (s *shell) clearCurrentLine() {
 	
 	inputlength := s._inputDisplayBufferLength
@@ -570,6 +649,10 @@ func (s *shell) clearCurrentLine() {
 	
 }
 
+/**
+Handle the Input of a given byte from the raw stdin console callback by the os
+resets state specific buffer variables such as autocompletion
+*/
 func (s *shell) handleKeyInput(byteInput Key, cmdline *CommandLine) {
 	
 	s.removePrediction()
@@ -609,6 +692,7 @@ func (s *shell) handleKeyInput(byteInput Key, cmdline *CommandLine) {
 	
 }
 
+//TODO or @deprecated
 func (s *shell) checkForArrow() bool {
 	
 	return false
@@ -642,6 +726,9 @@ func (s *shell) checkForArrowInput(keyInput Key) bool {
 	return false
 }
 
+/**
+Print the prefix for the custom Shell environment
+*/
 func (s *shell) printPrefix() {
 	
 	fmt.Print("\r")
@@ -651,17 +738,27 @@ func (s *shell) printPrefix() {
 	fmt.Print(COLOR_RESET)
 }
 
+/**
+moves the cursor the the right
+debug method
+*/
 func (s *shell) moveRight() {
 	fmt.Print(string(ARROW_RIGHT))
 }
 
+/**
+General debug function to print debug messages in the printVerbose handle function
+*/
 func (s *shell) debug(verbose int32, msg string) {
 	if verbose&CLI_VERBOSE_SHELL > 0 {
 		s.printVerbose(msg)
 	}
 }
 
-func (s *shell) removeArrowKeyStrokeFromBuffer() {
+/**
+Removes a triplet of bytes from the input buffer when possible
+*/
+func (s *shell) removeArrowKeyStrokeFromDisplayBuffer() {
 	l := len(s._inputDisplayBuffer)
 	if l > 2 {
 		s._inputDisplayBuffer = s._inputDisplayBuffer[0 : l-3]
@@ -669,6 +766,9 @@ func (s *shell) removeArrowKeyStrokeFromBuffer() {
 	}
 }
 
+/**
+Reprints the current line
+*/
 func (s *shell) reprintCurrentLine() {
 	s.clearCurrentLine()
 	
@@ -821,18 +921,17 @@ Creates a UserInterfaceInteraction Request when pressing TAB
 func (s *shell) requestSuggestionsOnTab(cmdline *CommandLine, byteInput Key) {
 	
 	if s._currentPredictionAvailable || byteInput != KEY_TAB {
-		
 		return
 	}
 	
-	s._requestSuggestions++
-	
-	if s._requestSuggestions == 1 {
-		fmt.Print("List " + strconv.Itoa(cmdline.numberOfSuggestions(s._parseDepth)) + " Options?\ny/n?\n")
+	if !s._requestSuggestions {
+		
+		s._consumed = true
+		fmt.Print("There are " + strconv.Itoa(cmdline.numberOfSuggestions(s._parseDepth)) + " available Options. \nDisplay? y/n?\n")
 		s.printPrefix()
-	} else {
-		s._requestSuggestions = 1
 	}
+	
+	s._requestSuggestions = true
 	
 }
 
@@ -849,9 +948,18 @@ func (s *shell) handleSuggestions(cmdline *CommandLine) {
 		s.printVerbose(s._requestSuggestions)
 		
 	}
-	if s._requestSuggestions == 1 && s.yesNoConfirm() {
-		s._requestSuggestions = 0
-		fmt.Print("\nPrinting" + strconv.Itoa(cmdline.numberOfSuggestions(s._parseDepth)) + "Options")
+	if s._requestSuggestions {
+		
+		s._requestSuggestions = false
+		if s.yesNoConfirm() {
+			
+			s._consumed = true
+			
+			fmt.Print("\nPrinting" + strconv.Itoa(cmdline.numberOfSuggestions(s._parseDepth)) + "Options")
+			
+		} else {
+			fmt.Print("\naborting...")
+		}
 		
 	}
 }
@@ -900,7 +1008,6 @@ func (s *shell) printVerbose(str interface{}) {
 Prints the current input buffer with spaces, in debug mode
 */
 func (s *shell) printVerboseBuffer() {
-	
 	sr := "["
 	for _, i := range s._currentInputBuffer {
 		if i == KEY_ESC {
@@ -917,5 +1024,4 @@ func (s *shell) printVerboseBuffer() {
 	}
 	sr += "]"
 	s.printVerbose(sr)
-	
 }
