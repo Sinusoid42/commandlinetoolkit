@@ -151,13 +151,15 @@ func newHistoryFileHandler(_programName string) *historyHandler {
 		_programName:        _programName,
 		_enabledHistoryFile: true,
 		_error:              nil,
-		_verbose:            0,
+		_verbose:            CLI_VERBOSE_FILE,
 		_verboseColor:       COLOR_PINK_I,
 		_debugPrintPrefix:   "#",
 		_rwFlag:             -1,
 		_bufferedLines:      [][]byte{},
 	}
+
 	h.open()
+
 	return h
 }
 

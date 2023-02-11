@@ -114,9 +114,7 @@ func newShell(_programName string, _logging bool, _usehistory bool, cmdline *Com
 		
 		s._historyFileHandler = newHistoryFileHandler(_programName)
 		
-		keys_history := s._historyFileHandler._bufferedLines
-		
-		if len(keys_history) > 0 {
+		if len(s._historyFileHandler._keyLines) > 0 {
 			s._previnputs = s._historyFileHandler._keyLines
 			s._currIndex = -1
 		}
@@ -587,6 +585,8 @@ func (s *shell) handleLineBreakInput(cmdline *CommandLine) {
 	//s._lastInputLength = len(s._lastInput)
 	
 	s._currIndex = -1
+	
+	s._consumed = false
 	
 	s._currentInputBuffer = s._inputDisplayBuffer
 	
