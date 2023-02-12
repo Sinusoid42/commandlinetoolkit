@@ -57,7 +57,7 @@ const CLI_ARGUMENTPROTECTED_ERROR CLICODE = 0b0000001000000
 This error is thrown when the commmandline is in interactive mode and experiences a fatal error of known or unkown origin
 Can be returned by a callback and will halt the stop execution of the entire program, similar to System.exit()
 */
-const CLI_RUNTIME_ERROR = 0b00000010000000
+const CLI_RUNTIME_ERROR CLICODE = 0b00000010000000
 
 /*
 ***********************************************************************************************************************
@@ -66,17 +66,20 @@ Interacrive Shell Mode
 providing a --interactive or -i when starting the commandline will lead to an executeable binary to keep running in a waitgroup shell struct
 that handles constant and continuous input via the commandline input structure, (in future that can be overwritten by using a restcall api)
 */
-const CLI_INTERACTIVE_MODE = 0b00000100000000
+const CLI_INTERACTIVE_MODE CLICODE = 0b00000100000000
 
 // when using the TAB and there is no predction available, usually we want to display all possible inputs for the given parse tree layer
-const CLI_NO_PREDICTION_ERROR = 0b00001000000000
+const CLI_NO_PREDICTION_ERROR CLICODE = 0b00001000000000
 
-const CLI_VERBOSE_SIMPLE = 0b000000001
-const CLI_VERBOSE_COMPLEX = 0b000000010
-const CLI_VERBOSE_PARSING = 0b000000100
-const CLI_VERBOSE_SHELL = 0b000001000
-const CLI_VERBOSE_OS_SIG = 0b000010000
-const CLI_VERBOSE_SHELL_PARSE = 0b000100000
-const CLI_VERBOSE_PREDICT = 0b001000000
-const CLI_VERBOSE_SHELL_BUFFER = 0b010000000
-const CLI_VERBOSE_FILE = 0b100000000
+const CLI_EXIT CLICODE = 0b100000000000
+
+const CLI_VERBOSE_SIMPLE CLICODE = 0b000000001
+const CLI_VERBOSE_COMPLEX CLICODE = 0b000000010
+const CLI_VERBOSE_PARSING CLICODE = 0b000000100
+const CLI_VERBOSE_SHELL CLICODE = 0b000001000
+const CLI_VERBOSE_OS_SIG CLICODE = 0b000010000
+const CLI_VERBOSE_SHELL_PARSE CLICODE = 0b000100000
+const CLI_VERBOSE_PREDICT CLICODE = 0b001000000
+const CLI_VERBOSE_SHELL_BUFFER CLICODE = 0b010000000
+const CLI_VERBOSE_FILE CLICODE = 0b100000000
+const CLI_VERBOSE_DEBUG CLICODE = 0b1000000000

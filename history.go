@@ -9,7 +9,7 @@ import (
 
 const HISTORY_FILENAME = ".history"
 
-type historyHandler struct {
+type history struct {
 	_historyFileName string
 	_programName     string
 	_theHistoryFile  *os.File
@@ -17,6 +17,8 @@ type historyHandler struct {
 
 	_bufferedLines [][]byte
 	_keyLines      [][]Key
+
+	_currHistoryIndex int
 
 	_enabledHistoryFile bool
 
@@ -27,10 +29,10 @@ type historyHandler struct {
 	_rwFlag int
 
 	_error   error
-	_verbose int
+	_verbose CLICODE
 }
 
-func (h *historyHandler) create() {
+func (h *history) create() {
 
 	h._theHistoryFile, h._error = os.Create(h._historyFileName)
 
@@ -43,7 +45,7 @@ func (h *historyHandler) create() {
 	}
 }
 
-func (h *historyHandler) open() {
+func (h *history) open() {
 
 	//h._theHistoryFile, h._error = os.OpenFile(h._historyFileName, os.O_RDWR|os.O_CREATE|os.O_SYNC, 0666)
 
@@ -58,15 +60,14 @@ func (h *historyHandler) open() {
 		if h._verbose&CLI_VERBOSE_FILE > 0 {
 			h.printVerbose("\n--> hF-Handler: openFile: ERROR >> " + h._error.Error() + "\n")
 		}
-
 		//now we have to create file
-
 		//h.create()
-
 	}
 
+	//read
 	h.read()
 
+	//overwrite so we can keep appending
 	h.create()
 
 	h._writer = bufio.NewWriter(h._theHistoryFile)
@@ -76,7 +77,6 @@ func (h *historyHandler) open() {
 
 		if err != nil {
 			h._error = err
-
 			if h._verbose&CLI_VERBOSE_FILE > 0 {
 				h.printVerbose("\n--> hF-Handler: writeFile: ERROR >> " + h._error.Error() + "\n")
 			}
@@ -87,7 +87,10 @@ func (h *historyHandler) open() {
 
 }
 
-func (h *historyHandler) append(newLine string) {
+func (h *history) append(newLine string) {
+	if len(newLine) < 1 {
+		return
+	}
 	_, err := h._writer.WriteString(newLine + "\n")
 	if err != nil {
 		h._error = err
@@ -97,6 +100,7 @@ func (h *historyHandler) append(newLine string) {
 		}
 
 	}
+
 	h._writer.Flush()
 }
 
@@ -104,7 +108,7 @@ func (h *historyHandler) append(newLine string) {
 *
 close the file, needs to be done in the end of the program, when the shell is closing
 */
-func (h *historyHandler) close() {
+func (h *history) close() {
 
 	if h._verbose&CLI_VERBOSE_FILE > 0 {
 		h.printVerbose("\n--> hF-Handler: closeFile: ERROR ")
@@ -115,7 +119,7 @@ func (h *historyHandler) close() {
 	defer h._theHistoryFile.Close()
 }
 
-func (h *historyHandler) read() [][]Key {
+func (h *history) read() [][]Key {
 
 	//reader := bufio.NewReader(h._theHistoryFile)
 
@@ -140,22 +144,32 @@ func (h *historyHandler) read() [][]Key {
 			keylines = append(keylines, k)
 		}
 	}
-	h._keyLines = keylines
-	return keylines
+	//once here, we have to revert the
+
+	h._keyLines = [][]Key{}
+	//l := len(keylines)
+	for i, _ := range keylines {
+
+		h._keyLines = append(h._keyLines, keylines[i])
+
+	}
+
+	return h._keyLines
 }
 
-func newHistoryFileHandler(_programName string) *historyHandler {
+func newHistoryFileHandler(_programName string) *history {
 
-	h := &historyHandler{
+	h := &history{
 		_historyFileName:    HISTORY_FILENAME,
 		_programName:        _programName,
 		_enabledHistoryFile: true,
 		_error:              nil,
-		_verbose:            CLI_VERBOSE_FILE,
+		_verbose:            0,
 		_verboseColor:       COLOR_PINK_I,
 		_debugPrintPrefix:   "#",
 		_rwFlag:             -1,
 		_bufferedLines:      [][]byte{},
+		_currHistoryIndex:   -1,
 	}
 
 	h.open()
@@ -167,8 +181,67 @@ func newHistoryFileHandler(_programName string) *historyHandler {
 *
 Prints with the verbose color overlay
 */
-func (h *historyHandler) printVerbose(str interface{}) {
+func (h *history) printVerbose(str interface{}) {
 	fmt.Print(h._verboseColor)
 	fmt.Print(str)
 	fmt.Print(COLOR_RESET)
+}
+
+/*
+*
+Iterate the previous history in the present shell
+*/
+func (h *history) iterateHistory(s *shellHandler) {
+	if s._enabledHistory && (s._arrowAction == 2 || s._arrowAction == 3) {
+		linputs := len(s._previnputs)
+
+		if h._currHistoryIndex >= 0 && linputs > h._currHistoryIndex {
+
+			s._inputDisplayBuffer = []Key{}
+
+			for i, _ := range s._previnputs[linputs-1-h._currHistoryIndex] {
+				s._inputDisplayBuffer = append(s._inputDisplayBuffer, s._previnputs[linputs-1-h._currHistoryIndex][i])
+			}
+
+			s._rtAction = 0
+		} else {
+			if -1 >= h._currHistoryIndex {
+				s._inputDisplayBuffer = []Key{}
+				s.clearCurrentLine()
+				s.printPrefix()
+			}
+			if h._currHistoryIndex < -1 {
+				h._currHistoryIndex = -1
+				s._alert = true
+			}
+			if h._currHistoryIndex >= linputs-1 {
+				h._currHistoryIndex = linputs - 1
+				s._alert = true
+			}
+		}
+
+		if s._alert {
+			s._alert = false
+			if s._playAlert {
+				fmt.Print("\a")
+			}
+		}
+		s.reprintCurrentLine()
+	}
+}
+
+func (h *history) up() bool {
+	h._currHistoryIndex--
+
+	return h._currHistoryIndex > 0
+}
+
+func (h *history) down() bool {
+	h._currHistoryIndex++
+
+	return h._currHistoryIndex > 0
+}
+
+func (h *history) reset() {
+	h._currHistoryIndex = -1
 }

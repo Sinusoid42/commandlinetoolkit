@@ -56,7 +56,7 @@ type CommandLine struct {
 	_options int32
 	
 	//run in verbose mode
-	_verbose      int32
+	_verbose      CLICODE
 	_verboseColor Color
 	
 	//the interactive shell
@@ -133,10 +133,12 @@ func (c *CommandLine) runInteractive() {
 }
 
 func (c *CommandLine) Wait() {
-	c._shell._osHandler._wg.Wait()
 	
+	c._shell.wait()
+	
+	c._shell.Exit()
 	//reset the original bash
-	setSttyState(c._shell._originalSttyState)
+	
 	//dont need it anymore
 	//os.Exit(0) //here we simulate the CTRL+C in case the syscall didnt get registered
 }
