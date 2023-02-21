@@ -21,6 +21,7 @@ type history struct {
 	_currHistoryIndex int
 
 	_enabledHistoryFile bool
+	_enabledHistory     bool
 
 	_verboseColor Color
 
@@ -54,6 +55,7 @@ func (h *history) open() {
 	if h._verbose&CLI_VERBOSE_FILE > 0 {
 		h.printVerbose("\n--> hF-Handler: openFile: " + h._theHistoryFile.Name())
 	}
+
 	if h._error != nil {
 		//file probably already existing
 		h._rwFlag = -1
@@ -162,7 +164,8 @@ func newHistoryFileHandler(_programName string) *history {
 	h := &history{
 		_historyFileName:    HISTORY_FILENAME,
 		_programName:        _programName,
-		_enabledHistoryFile: true,
+		_enabledHistoryFile: false,
+		_enabledHistory:     false,
 		_error:              nil,
 		_verbose:            0,
 		_verboseColor:       COLOR_PINK_I,
@@ -192,42 +195,46 @@ func (h *history) printVerbose(str interface{}) {
 Iterate the previous history in the present shell
 */
 func (h *history) iterateHistory(s *shellHandler) {
-	if s._enabledHistory && (s._arrowAction == 2 || s._arrowAction == 3) {
-		linputs := len(s._previnputs)
 
-		if h._currHistoryIndex >= 0 && linputs > h._currHistoryIndex {
-
-			s._inputDisplayBuffer = []Key{}
-
-			for i, _ := range s._previnputs[linputs-1-h._currHistoryIndex] {
-				s._inputDisplayBuffer = append(s._inputDisplayBuffer, s._previnputs[linputs-1-h._currHistoryIndex][i])
-			}
-
-			s._rtAction = 0
-		} else {
-			if -1 >= h._currHistoryIndex {
-				s._inputDisplayBuffer = []Key{}
-				s.clearCurrentLine()
-				s.printPrefix()
-			}
-			if h._currHistoryIndex < -1 {
-				h._currHistoryIndex = -1
-				s._alert = true
-			}
-			if h._currHistoryIndex >= linputs-1 {
-				h._currHistoryIndex = linputs - 1
-				s._alert = true
-			}
-		}
-
-		if s._alert {
-			s._alert = false
-			if s._playAlert {
-				fmt.Print("\a")
-			}
-		}
-		s.reprintCurrentLine()
+	if s._attribs&HISTORY == 0 || !(h._enabledHistory && (s._arrowAction == 2 || s._arrowAction == 3)) {
+		return
 	}
+
+	linputs := len(s._previnputs)
+
+	if h._currHistoryIndex >= 0 && linputs > h._currHistoryIndex {
+
+		s._inputDisplayBuffer = []Key{}
+
+		for i, _ := range s._previnputs[linputs-1-h._currHistoryIndex] {
+			s._inputDisplayBuffer = append(s._inputDisplayBuffer, s._previnputs[linputs-1-h._currHistoryIndex][i])
+		}
+
+		s._rtAction = 0
+	} else {
+		if -1 >= h._currHistoryIndex {
+			s._inputDisplayBuffer = []Key{}
+			s.clearCurrentLine()
+			s.printPrefix()
+		}
+		if h._currHistoryIndex < -1 {
+			h._currHistoryIndex = -1
+			s._alert = true
+		}
+		if h._currHistoryIndex >= linputs-1 {
+			h._currHistoryIndex = linputs - 1
+			s._alert = true
+		}
+	}
+
+	if s._alert {
+		s._alert = false
+		if s._playAlert {
+			fmt.Print("\a")
+		}
+	}
+	s.reprintCurrentLine()
+
 }
 
 func (h *history) up() bool {

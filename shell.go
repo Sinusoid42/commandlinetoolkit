@@ -62,6 +62,19 @@ func (s *shell) log(input string) {
 
 }
 
+func (s *shell) set(attrib ATTRIBUTE, clicode CLICODE) {
+	s._shellHandler.set(attrib, clicode)
+}
+
+func (s *shell) get() ATTRIBUTE {
+	return s._shellHandler.getAttributes()
+}
+
+func (s *shell) getCode(attrib ATTRIBUTE) CLICODE {
+	
+	return s._shellHandler.getAttributeCode(attrib)
+}
+
 /*
 	Run the shell in a secondary go routine, catch system calls within another go routine
 
@@ -80,9 +93,9 @@ func (s *shell) run(cmdline *CommandLine) {
 	
 	//set sys calls and make sys buffering
 	
+	s._shellHandler.boot()
 	sh := func() {
-		
-		s._shellHandler.boot()
+		//	s._shellHandler._osHandler.registerSystemSignalCallbacks(s._shellHandler)
 		
 		//reprint line header
 		s._shellHandler.printPrefix()

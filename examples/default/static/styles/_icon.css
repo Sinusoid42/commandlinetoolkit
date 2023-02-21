@@ -1,0 +1,32 @@
+
+.iconyellowpink{
+    background:  linear-gradient(0deg, rgb(255, 204, 41) 0%, rgb(255, 65, 232) 100%);
+}
+
+
+.iconyellowmagenta{
+
+}
+
+.icon{
+    background: linear-gradient(183deg, rgb(255, 170, 49) 40%, rgba(255, 35, 132, 0.7) 100%);
+    background:  linear-gradient(0deg, rgb(255, 204, 41) 0%, rgb(255, 65, 232) 100%);
+    background:  linear-gradient(350deg, rgb(41, 255, 116) 0%, rgb(35, 144, 255) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    font-family: monospace;
+
+    font-size: 20px;
+    height: 22px;
+    width: 120px;
+    padding: 2px;
+}
+
+.icon:hover{
+    color: white;
+    background:  linear-gradient(0deg, rgb(199, 199, 199) 0%, rgb(199, 199, 199) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    font-family: monospace;
+    font-size: 20px;
+}

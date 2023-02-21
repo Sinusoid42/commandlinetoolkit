@@ -11,7 +11,8 @@ type debugHandler struct {
 func newDebugHandler() *debugHandler {
 
 	d := &debugHandler{
-		_verboseColor: GenColor(DARK_COLORFONT, INTENSITY_COLORTYPE, GRAY_COLOR),
+		//_verboseColor: GenColor("3", "", "2"),
+		_verboseColor: COLOR_GRAY_debug,
 		_verbose:      0,
 	}
 
@@ -58,6 +59,15 @@ func (d *debugHandler) printVerbose(code CLICODE, str interface{}) {
 
 /*
 *
+Prints with vibrant red error code
+*/
+func (d *debugHandler) printError(str interface{}) {
+	fmt.Print(COLOR_RED_I, "Error:\n", str, COLOR_RESET)
+
+}
+
+/*
+*
 Prints the current input buffer with spaces, in debug mode
 */
 func (d *debugHandler) printVerboseBuffer(buffer []Key) {
@@ -88,18 +98,32 @@ func (d *debugHandler) boot() {
 *************************************
 debugging with codes
 */
-func (d *debugHandler) debugBuffer(k Key) {
+func (d *debugHandler) debugBufferSingle(k Key) {
 
 	d.printVerbose(CLI_VERBOSE_SHELL_BUFFER, "\n-->shell: numBytes: ")
 	d.printVerbose(CLI_VERBOSE_SHELL_BUFFER, numBytesAvailable())
 	d.printVerbose(CLI_VERBOSE_SHELL_BUFFER, "\n")
 	d.printVerbose(CLI_VERBOSE_SHELL_BUFFER, "-->shell: inputbyte: ")
 	d.printVerbose(CLI_VERBOSE_SHELL_BUFFER, []byte{byte(k)})
+	d.printVerbose(CLI_VERBOSE_DEBUG, "\n")
+
+}
+
+/*
+*************************************
+debugging with codes
+*/
+func (d *debugHandler) debugBuffer(k []Key) {
+
+	d.printVerbose(CLI_VERBOSE_SHELL_BUFFER, "\n")
+	d.printVerbose(CLI_VERBOSE_SHELL_BUFFER, "-->shell: inputbyte: ")
+	d.printVerbose(CLI_VERBOSE_SHELL_BUFFER, k)
+	d.printVerbose(CLI_VERBOSE_DEBUG, "\n")
 
 }
 
 func (d *debugHandler) debugReturn() {
-	d.printVerbose(CLI_VERBOSE_SHELL, "\n-->shell: Registered RETURN KEY")
+	d.printVerbose(CLI_VERBOSE_SHELL, "\n-->shell: Registered RETURN KEY\n")
 
 }
 

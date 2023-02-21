@@ -1,0 +1,18 @@
+.bg {
+    background-color: rgba(55, 60, 62, 1);
+    color: white;
+    font-family: monospace;
+    font-size: 18px;
+}
+
+._font_bg_gradient{
+    composes: icon;
+
+    background:  linear-gradient(350deg, rgb(41, 255, 116) 0%, rgb(35, 144, 255) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+
+
+

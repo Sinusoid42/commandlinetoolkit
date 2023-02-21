@@ -10,12 +10,11 @@ import (
 //either by setting the paramters required or not,
 
 //const
-var VERSION = "0.0.5"
+var VERSION = "0.1.1"
 
 type CommandLine struct {
 	
 	//here we have the commandline current parsetree
-	_rootArgument *Argument
 	
 	//either provided with the json
 	
@@ -29,6 +28,8 @@ type CommandLine struct {
 	*/
 	_parser *parser
 	
+	_debugHandler *debugHandler
+	
 	/*
 		the builder creates the argument tree from the provided json or programmed input
 		either we can use a template from the commandlinetemplate.go lib implementation
@@ -37,14 +38,14 @@ type CommandLine struct {
 			//they are reserved for either running the commandline within an own shell or printing the dynamically build short or full help menu
 	
 	*/
-	_builder *builder
 	
 	_runtimeCodes CLICODE
+	
 	/*
 		creates a .clihistory text file
 	*/
-	_logging    bool
-	_usehistory bool
+	
+	_logging bool
 	
 	//available arguments in total
 	_size int32
@@ -55,11 +56,15 @@ type CommandLine struct {
 	//amount of options
 	_options int32
 	
+	_enabled bool
+	
 	//run in verbose mode
 	_verbose      CLICODE
 	_verboseColor Color
 	
 	//the interactive shell
+	_enabledShell bool
+	
 	_shell *shell
 }
 
@@ -67,24 +72,68 @@ func NewCommandLine() *CommandLine {
 	
 	cli := &CommandLine{
 		_parser:       newparser(),
-		_program:      newprogram(),
-		_usehistory:   true,
+		_program:      newprogram("config.json"),
 		_verbose:      0,
+		_enabledShell: false,
 		_verboseColor: COLOR_RED_I,
 	}
 	
+	cli._shell = newShell(cli._program._programName, false, false, cli)
 	cli.Rebuild()
+	
 	return cli
 }
 
 func (c *CommandLine) ReadJSON(path string) {
+	
+	c._program.readJsonProgram(path)
+	
+	c._program.check()
+	
+	c._parser.parse(c._program)
+	
+	c._enabled = true
+	
+}
 
+func (c *CommandLine) Set(attrib ATTRIBUTE, clicode CLICODE) {
+	
+	c._shell.set(attrib, clicode)
+	if attrib&SHELL > 0 {
+		
+		//programmer has to implement a WAIT in the end
+		
+		if !c._enabledShell {
+			c._shell.run(c)
+		}
+		
+		c._enabledShell = true
+	}
+}
+
+func (c *CommandLine) GetCode(attrib ATTRIBUTE) CLICODE {
+	if c._enabledShell {
+		return CLI_SUCCESS
+	}
+	return c._shell.getCode(attrib)
+}
+
+func (c *CommandLine) Get() ATTRIBUTE {
+	if c._enabledShell {
+		return c._shell.get() | SHELL
+	}
+	return c._shell.get()
+}
+
+func (c *CommandLine) newShell() {
+	if c._shell == nil {
+		c._shell = newShell(c._program._programName, false, false, c)
+	}
 }
 
 func (c *CommandLine) Rebuild() CLICODE {
-	c.Clear()
 	
-	c._builder.Rebuild(c)
+	//c.Clear()
 	
 	return CLI_SUCCESS
 }
@@ -94,7 +143,7 @@ func (c CommandLine) JSON() string {
 }
 
 func (c *CommandLine) Clear() CLICODE {
-	
+	c._shell._shellHandler.clearTerminal()
 	return CLI_SUCCESS
 }
 
@@ -114,11 +163,18 @@ func (c *CommandLine) Parse(args []string) CLICODE {
 	
 	//either we have the programname from the executeable by running or from the json file provided
 	
-	c._shell = newShell(c._program._programName, c._logging, c._usehistory, c)
-	
 	//fmt.Println("DONE:..")
 	
-	c._shell.run(c)
+	fmt.Println(c._parser._parseTree)
+	
+	if !c._enabled {
+		c._debugHandler.printError("-->Commandline: Not enabled, required is a cli program!")
+	}
+	
+	if c._enabledShell {
+		c._shell.run(c)
+		
+	}
 	return CLI_SUCCESS
 	
 }

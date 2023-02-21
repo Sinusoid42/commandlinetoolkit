@@ -111,11 +111,15 @@ var COLOR_CYAN_IBG = Color(COLOR_HEADER + "0;106m")
 var COLOR_GRAY = Color(COLOR_HEADER + "0;37m")
 var COLOR_GRAY_L = Color(COLOR_HEADER + "1;37m")
 var COLOR_GRAY_D = Color(COLOR_HEADER + "2;37m")
+var COLOR_GRAY_ID = Color(COLOR_HEADER + "3;2m")
+
 var COLOR_GRAY_I = Color(COLOR_HEADER + "3;37m")
 var COLOR_GRAY_U = Color(COLOR_HEADER + "4;37m")
 var COLOR_GRAY_BL = Color(COLOR_HEADER + "5;37m")
 var COLOR_GRAY_X = Color(COLOR_HEADER + "9;37m")
 var COLOR_GRAY_BG = Color(COLOR_HEADER + "0;47m")
 var COLOR_GRAY_IBG = Color(COLOR_HEADER + "0;107m")
+
+var COLOR_GRAY_debug = Color(COLOR_HEADER + "3;2m")
 
 var COLOR_RESET = Color(COLOR_HEADER + "0;0m")
