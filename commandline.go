@@ -165,7 +165,7 @@ func (c *CommandLine) Parse(args []string) CLICODE {
 	
 	//fmt.Println("DONE:..")
 	
-	fmt.Println(c._parser._parseTree)
+	//fmt.Println(c._parser._parseTree)
 	
 	if !c._enabled {
 		c._debugHandler.printError("-->Commandline: Not enabled, required is a cli program!")

@@ -47,7 +47,14 @@
              {
                 "datatype": "file",
                 "required": true,
-                "type": "PARAM"
+                "type": "PARAM",
+                "arguments": [
+                   {
+                      "datatype": "file",
+                      "required": true,
+                      "type": "PARAM"
+                   }
+                ]
              }
           ],
           "datatype": "file",
