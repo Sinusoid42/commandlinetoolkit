@@ -90,9 +90,12 @@ func (c *CommandLine) ReadJSON(path string) {
 	
 	c._program.check()
 	
-	c._parser.parse(c._program)
-	
-	c._enabled = true
+	if title, err := c._parser.parseProgram(c._program); err == nil {
+		c._enabled = true
+		fmt.Print(title)
+	} else {
+		fmt.Print(err)
+	}
 	
 }
 
@@ -199,7 +202,7 @@ func (c *CommandLine) Wait() {
 	//os.Exit(0) //here we simulate the CTRL+C in case the syscall didnt get registered
 }
 
-func (c *CommandLine) checkPredictions(searchPrefix string, layer int32) (string, CLICODE) {
+func (c *CommandLine) checkPredictions(args []string, searchPrefix string, layer int32) (string, CLICODE) {
 	
 	if c._verbose&CLI_VERBOSE_PREDICT > 0 {
 		
@@ -220,10 +223,14 @@ func (c *CommandLine) checkPredictions(searchPrefix string, layer int32) (string
 	return "", CLI_NO_PREDICTION_ERROR
 }
 
-func (c *CommandLine) numberOfSuggestions(layer int32) int {
+func (c *CommandLine) numberOfSuggestions(args []string, layer int32) int {
 	
 	return 69
 	
+}
+
+func (c *CommandLine) getSuggestions(args []string, layer int32) []string {
+	return nil
 }
 
 /**

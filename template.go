@@ -23,11 +23,11 @@ func DefaultTemplate() map[string]interface{} {
 
 	m := make(map[string]interface{})
 
-	m[VERSION] = "0.0.1"
-	m[AUTHORSTRING] = "ben"
-	m[EXECUTEABLESTRING] = ""
-	m[DESCRIPTIONSTRING] = "The description of the application"
-	m[MANUALSTRING] = "The Man Page for this application"
+	m[VERSIONKEY] = "0.0.1"
+	m[AUTHORKEY] = "ben"
+	m[EXECUTEABLEKEY] = ""
+	m[DESCRIPTIONKEY] = "The description of the application"
+	m[MANUALKEY] = "The Man Page for this application"
 
 	args := []map[string]interface{}{}
 
@@ -45,7 +45,7 @@ func DefaultTemplate() map[string]interface{} {
 
 	args = append(args, defaultConfigurationFileOption())
 
-	m[ARGUMENTSSTRING] = args
+	m[ARGUMENTSKEY] = args
 
 	return m
 

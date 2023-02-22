@@ -5,21 +5,21 @@ type ArgumentType int32
 type ArgumentDataType string
 
 const (
-	TYPESTRING        string = "type"
-	LONGFLAGSTRING           = "flag"
-	SHORTFLAGSTRING          = "sflag"
-	HELPSTRING               = "help"
-	SHORTHELPSTRING          = "shelp"
-	DATATYPESTRING           = "datatype"
-	RUNSTRING                = "run"
-	REQUIREDSTRING           = "required"
-	MUTEABLESTRING           = "muteable"
-	ARGUMENTSSTRING          = "arguments"
-	AUTHORSTRING             = "author"
-	DESCRIPTIONSTRING        = "description"
-	MANUALSTRING             = "man"
-	VERSIONSTRING            = "version"
-	EXECUTEABLESTRING        = "executeable"
+	TYPEKEY        string = "type"
+	LONGFLAGKEY           = "flag"
+	SHORTFLAGKEY          = "sflag"
+	HELPKEY               = "help"
+	SHORTHELPKEY          = "shelp"
+	DATATYPEKEY           = "datatype"
+	RUNKEY                = "run"
+	REQUIREDKEY           = "required"
+	MUTEABLEKEY           = "muteable"
+	ARGUMENTSKEY          = "arguments"
+	AUTHORKEY             = "author"
+	DESCRIPTIONKEY        = "description"
+	MANUALKEY             = "man"
+	VERSIONKEY            = "version"
+	EXECUTEABLEKEY        = "executeable"
 )
 
 var FILETYPE ArgumentDataType = "file" //the software checks wether the file exists and can be read

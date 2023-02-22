@@ -10,20 +10,15 @@ type settings struct {
 }
 
 func (s *settings) build(m map[string]interface{}) {
-	if str, ok := m["version"].(string); ok {
 
-		s.version = str
+	s.author = check(AUTHORKEY, "author", m)
 
-	} else {
+	s.version = check(VERSIONKEY, "0.0.1", m)
 
-		s.version = "0.0.1"
+	s.man = check(MANUALKEY, "Man Page", m)
 
-	}
+	s.description = check(DESCRIPTIONKEY, "Description", m)
 
-	s.author = check("author", "author", m)
-
-	s.version = check("version", "0.0.1", m)
-
-	s.man = check("man", "Man Page", m)
+	s.executeable = check(EXECUTEABLEKEY, "Executeable", m)
 
 }

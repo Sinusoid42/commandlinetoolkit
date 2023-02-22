@@ -473,7 +473,7 @@ func (s *shellHandler) requestSuggestionsOnTab() {
 	if !s._requestSuggestions {
 		
 		s._consumed = true
-		fmt.Print("There are " + strconv.Itoa(s.cmdline.numberOfSuggestions(s._parseDepth)) + " available Options. \nDisplay? y/n?\n")
+		fmt.Print("There are " + strconv.Itoa(s.cmdline.numberOfSuggestions(strings.Split(string(s._currentInputBuffer), " "), s._parseDepth)) + " available Options. \nDisplay? y/n?\n")
 		s.printPrefix()
 	}
 	
@@ -822,7 +822,8 @@ func (s *shellHandler) checkForCurrentPrediction() {
 		
 		code := CLICODE(-1)
 		
-		s._newestPrediction, code = s.cmdline.checkPredictions(s.latestFullInput())
+		latestWord, layer := s.latestFullInput()
+		s._newestPrediction, code = s.cmdline.checkPredictions(strings.Split(string(s._currentInputBuffer), " "), latestWord, layer)
 		
 		s._currentPredictionAvailable = true
 		
@@ -912,7 +913,7 @@ func (s *shellHandler) handleSuggestions() {
 			
 			s._consumed = true
 			
-			fmt.Print("\nPrinting" + strconv.Itoa(s.cmdline.numberOfSuggestions(s._parseDepth)) + "Options")
+			fmt.Print("\nPrinting" + strconv.Itoa(s.cmdline.numberOfSuggestions(strings.Split(string(s._currentInputBuffer), " "), s._parseDepth)) + "Options")
 			
 		} else {
 			fmt.Print("\naborting...")

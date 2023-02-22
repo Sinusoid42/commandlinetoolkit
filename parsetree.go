@@ -1,10 +1,6 @@
 package commandlinetoolkit
 
-import (
-	"errors"
-	"fmt"
-	"strings"
-)
+import "fmt"
 
 type parsetree struct {
 	_depth int
@@ -40,11 +36,31 @@ func newNode(arg *Argument) *argnode {
 	}
 }
 
+/*
+**********************************************************************
+Build the tree
+*/
 func (p *parsetree) build(m map[string]interface{}) {
 
 	p._settings.build(m)
 
-	if args, ok := m["arguments"].([]interface{}); ok {
+	args, ok := m[ARGUMENTSKEY].([]map[string]interface{})
+
+	if !ok {
+		return
+	}
+
+	for _, arg := range args {
+
+		p._root.addArgument(arg)
+
+	}
+
+	fmt.Println(p)
+	//now we expect that every part from the input is well formattedd
+	//map[string]interface{} etc .. 'm["arguments"].(type) = []map[string]interface{}' !!
+
+	/*if args, ok := m["arguments"].([]interface{}); ok {
 
 		for _, pArg := range args {
 
@@ -54,14 +70,18 @@ func (p *parsetree) build(m map[string]interface{}) {
 
 			}
 		}
-	}
+	}*/
 }
 
+/*
+**********************************************************************
+Add a new Argument as a result of traversion the input tree
+*/
 func (n *argnode) addArgument(m map[string]interface{}) {
 
-	if !checkParseableArgFromProgramFile(m) {
+	/*	if !checkParseableArgFromProgramFile(m) {
 		return
-	}
+	}*/
 
 	argN := &argnode{
 
@@ -74,27 +94,33 @@ func (n *argnode) addArgument(m map[string]interface{}) {
 		return
 	}
 
-	longFlag, _ := m[LONGFLAGSTRING].(string)
+	longFlag, _ := m[LONGFLAGKEY].(string)
 
-	shortFlag, _ := m[SHORTFLAGSTRING].(string)
+	shortFlag, _ := m[SHORTFLAGKEY].(string)
+
+	help, _ := m[HELPKEY].(string)
+
+	shelp, _ := m[SHORTHELPKEY].(string)
 
 	arg := &Argument{
 		arg_type: argType,
 		lflag:    longFlag,
 		sflag:    shortFlag,
+		lhelp:    help,
+		shelp:    shelp,
 	}
 
 	//append the argument in a new argument node in the tree
 	argN._arg = arg
 	n._sub = append(n._sub, argN)
 
-	subArgs := m[ARGUMENTSSTRING]
+	subArgs := m[ARGUMENTSKEY]
 
 	if subArgs != nil {
 		var ok bool
 
 		tt, ok := subArgs.([]map[string]interface{})
-		fmt.Println(tt)
+
 		if ok {
 
 			for _, v := range tt {
@@ -108,94 +134,4 @@ func (n *argnode) addArgument(m map[string]interface{}) {
 
 	//manual unmarshalling here required, to check for non existing variables in the tree
 
-}
-
-func (p *parsetree) String() string {
-
-	s := ""
-
-	s += p._root.String()
-
-	return s
-
-}
-
-func (n *argnode) String() string {
-
-	s := ""
-	if n._arg != nil {
-
-		s += argtypeString(n._arg.arg_type) + ": " + n._arg.lflag + "\n"
-
-	}
-
-	for _, k := range n._sub {
-		s += "->" + k.String() + "\n"
-	}
-
-	return s
-}
-
-func parseArgType(m map[string]interface{}) (ArgumentType, error) {
-
-	theType := ArgumentType(0)
-
-	typeStr := ""
-	var ok bool
-
-	if typeStr, ok = m["type"].(string); ok {
-
-		typeStrArrOR := strings.Split(typeStr, "|")
-		typeStrArrComma := strings.Split(typeStr, ",")
-
-		theTypes := []string{}
-
-		if len(typeStrArrOR) > 0 {
-			theTypes = typeStrArrOR
-
-		} else if len(typeStrArrComma) > 0 {
-			theTypes = typeStrArrComma
-		}
-
-		for _, value := range theTypes {
-
-			if strings.Compare(value, OPTIONSTRING) == 0 {
-				theType |= OPTION
-			}
-			if strings.Compare(value, PARAMETERSTRING) == 0 {
-				theType |= PARAMETER
-			}
-			if strings.Compare(value, WILDCARDSTRING) == 0 {
-				theType |= WILDCARD
-			}
-			if strings.Compare(value, FLAGSTRING) == 0 {
-				theType |= FLAG
-			}
-			if strings.Compare(value, COMMANDSTRING) == 0 {
-				theType |= COMMAND
-			}
-		}
-	}
-
-	if (theType&COMMAND > 0 && (theType&(OPTION|WILDCARD) > 0 || theType&PARAMETER > 0)) || (theType&(OPTION|WILDCARD) > 0 && (theType&PARAMETER > 0 || theType&COMMAND > 0)) {
-		return 0, errors.New("Could not parse the Type")
-	}
-	return theType, nil
-}
-
-func checkParseableArgFromProgramFile(m map[string]interface{}) bool {
-	if str, ok := m[TYPESTRING].(string); ok {
-		if strings.Compare(str, OPTIONSTRING) == 0 {
-			_, okl := m[LONGFLAGSTRING]
-			_, oks := m[SHORTFLAGSTRING]
-			if okl || oks {
-				return true
-			}
-
-		}
-		if strings.Compare(str, PARAMETERSTRING) == 0 {
-			return true
-		}
-	}
-	return false
 }

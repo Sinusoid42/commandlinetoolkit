@@ -1,0 +1,139 @@
+
+
+
+//TODO Deeper parsing, here problems with type casing in go and maps
+
+		if len(argArr0) > len(argArr1) {
+
+			for index, v := range argArr0 {
+
+				if m, ok := v.(map[string]interface{}); ok {
+
+					argArr0[index] = p.checkTopLevelArg(m)
+
+					if argArr0[index].(map[string]interface{})[TYPESTRING] == OPTIONSTRING {
+
+						/*switch argArr0[index].(map[string]interface{})[LONGFLAGSTRING].(string) {
+						case _defaultInteractiveOption:
+							{
+								hasInteractiveOption = true
+							}
+						case _defaultLoggingOption:
+							{
+								hasLoggingOption = true
+							}
+						case _defaultHistoryOption:
+							{
+								hasHistoryOption = true
+							}
+						case _defaultHelpOption:
+							{
+								hasHelpOption = true
+							}
+						case _ddefaultHistoryFileOption:
+							{
+								hasHistoryFileOption = true
+							}
+						case _defaultConfigurationFileOption:
+							{
+								hasConfigurationFileOption = true
+							}
+						case _defaultVerbosityOption:
+							{
+								hasVerbosityOption = true
+							}
+						}*/
+					}
+				}
+			}
+
+			/*	if !hasInteractiveOption {
+					argArr0 = append(argArr0, theInteractiveOption)
+				}
+				if !hasLoggingOption {
+					argArr0 = append(argArr0, theLoggingOption)
+				}
+				if !hasHistoryOption {
+					argArr0 = append(argArr0, theHistoryOption)
+				}
+				if !hasHelpOption {
+					argArr0 = append(argArr0, theHelpOption)
+				}
+				if !hasHistoryFileOption {
+					argArr0 = append(argArr0, theHistoryFileOption)
+				}
+				if !hasConfigurationFileOption {
+					argArr0 = append(argArr0, theConfigFileOption)
+				}
+				if !hasVerbosityOption {
+					argArr0 = append(argArr0, theVerbosityOption)
+				}*/
+
+			allArgs = argArr0
+
+			//p.checkTopLevelArgs(argArr0)
+		} else {
+
+			for index, m := range argArr1 {
+				argArr0[index] = p.checkTopLevelArg(m)
+				if argArr0[index].(map[string]interface{})[TYPESTRING] == OPTIONSTRING {
+
+					/*switch argArr0[index].(map[string]interface{})[LONGFLAGSTRING].(string) {
+					case _defaultInteractiveOption:
+						{
+							hasInteractiveOption = true
+						}
+					case _defaultLoggingOption:
+						{
+							hasLoggingOption = true
+						}
+					case _defaultHistoryOption:
+						{
+							hasHistoryOption = true
+						}
+					case _defaultHelpOption:
+						{
+							hasHelpOption = true
+						}
+					case _ddefaultHistoryFileOption:
+						{
+							hasHistoryFileOption = true
+						}
+					case _defaultConfigurationFileOption:
+						{
+							hasConfigurationFileOption = true
+						}
+					case _defaultVerbosityOption:
+						{
+							hasVerbosityOption = true
+						}
+
+					}*/
+				}
+
+			}
+			/*
+				if !hasInteractiveOption {
+					argArr1 = append(argArr1, theInteractiveOption)
+				}
+				if !hasLoggingOption {
+					argArr1 = append(argArr1, theLoggingOption)
+				}
+				if !hasHistoryOption {
+					argArr1 = append(argArr1, theHistoryOption)
+				}
+				if !hasHelpOption {
+					argArr1 = append(argArr1, theHelpOption)
+				}
+				if !hasHistoryFileOption {
+					argArr1 = append(argArr1, theHistoryFileOption)
+				}
+				if !hasConfigurationFileOption {
+					argArr1 = append(argArr1, theConfigFileOption)
+				}
+				if !hasVerbosityOption {
+					argArr1 = append(argArr1, theVerbosityOption)
+				}*/
+
+			allArgs = argArr1
+		}
