@@ -94,6 +94,7 @@ func (s *shell) run(cmdline *CommandLine) {
 	//set sys calls and make sys buffering
 	
 	s._shellHandler.boot()
+	
 	sh := func() {
 		//	s._shellHandler._osHandler.registerSystemSignalCallbacks(s._shellHandler)
 		
@@ -127,7 +128,7 @@ func (s *shell) run(cmdline *CommandLine) {
 					
 				}
 				
-				if s.stringInputBuffer() == "verbose" {
+				if s.stringInputBuffer() == "--verbose" {
 					
 					fmt.Print(COLOR_PINK_IBG)
 					
@@ -139,7 +140,7 @@ func (s *shell) run(cmdline *CommandLine) {
 					
 				}
 				
-				if s.stringInputBuffer() == "!verbose" {
+				if s.stringInputBuffer() == "--verbose=false" {
 					
 					fmt.Print(COLOR_PINK_IBG)
 					
@@ -151,8 +152,11 @@ func (s *shell) run(cmdline *CommandLine) {
 					s.setVerbose(0)
 					
 				}
+				args := []string{"executionfile"}
 				
-				fmt.Print("\n", s.GetParseArgs())
+				args = append(args, strings.Fields(string(s._shellHandler._currentInputBuffer))...)
+				
+				cmdline.Parse(args)
 				
 				/*if s._inputDisplayBufferLength > 0 && !s.consumed() {
 				

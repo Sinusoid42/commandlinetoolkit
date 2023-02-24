@@ -29,7 +29,7 @@ func DefaultTemplate() map[string]interface{} {
 	m[DESCRIPTIONKEY] = "The description of the application"
 	m[MANUALKEY] = "The Man Page for this application"
 
-	args := []map[string]interface{}{}
+	args := make([]map[string]interface{}, 0)
 
 	args = append(args, defaultHelpOption())
 

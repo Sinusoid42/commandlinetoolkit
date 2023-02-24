@@ -1,5 +1,4 @@
 {
-    "version": "0.0.5",
     "arguments": [
        {
           "flag": "help",
@@ -65,18 +64,11 @@
           "run": "configFile, bootonly",
           "type": "OPTION"
        },
-       {
-          "flag": "todo",
-          "type": "OPTION",
-          "arguments" : [
-             {
-                "type" : "PARAM"
-             }
-          ]
-       }
+       {}
     ],
     "author": "ben",
     "description": "The description of the application",
     "executeable": "",
-    "man": "The Man Page for this application"
+    "man": "The Man Page for this application",
+    "version": "0.0.1"
  }

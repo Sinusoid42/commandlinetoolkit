@@ -1,6 +1,6 @@
 package commandlinetoolkit
 
-// when checking a given command|option template, we check in the program, if any of the required or optional commands are present
+// when checking a given command|option template, we checkInputProgram in the program, if any of the required or optional commands are present
 // if not, they will be overwritten in the config file
 // if optional and present, they will not be overwritten
 
@@ -12,6 +12,17 @@ const (
 	_ddefaultHistoryFileOption             = "historyfile"
 	_defaultConfigurationFileOption        = "config"
 	_defaultVerbosityOption                = "verbose"
+)
+
+const (
+	_defaultVerbosityCommand   string = "verbose"
+	_defaultHistoryCommand            = "history"
+	_defaultHistoryFileCommand        = "historyfile"
+	_defaultShellCommand              = "shell"
+	_defaultExitCommand               = "exit"
+	_defaultLOGGINGCommand            = "logging"
+	_defaultConfigFileCommand         = "configFile"
+	_defaultBootOnlyCommand           = "bootonly"
 )
 
 // store the default arguments in global scope buffer, when rereading or rebuilding the program during runtime
@@ -133,4 +144,134 @@ func defaultVerbosityOption() map[string]interface{} {
 	m[RUNKEY] = "verbose"
 
 	return m
+}
+
+func isLibCommand(str string) bool {
+	switch str {
+	case _defaultVerbosityCommand:
+		{
+			return true
+		}
+	case _defaultHistoryCommand:
+		{
+			return true
+		}
+	case _defaultHistoryFileCommand:
+		{
+			return true
+		}
+	case _defaultShellCommand:
+		{
+			return true
+		}
+	case _defaultExitCommand:
+		{
+			return true
+		}
+	case _defaultLOGGINGCommand:
+		{
+			return true
+		}
+	case _defaultConfigFileCommand:
+		{
+			return true
+		}
+	case _defaultBootOnlyCommand:
+		{
+			return true
+		}
+	}
+	return false
+}
+
+func getRunCommand(str string) func(parameters []*Argument, arguments []*Argument, cmdline *CommandLine) CLICODE {
+
+	switch str {
+	case _defaultVerbosityCommand:
+		{
+			return func(parameters []*Argument, opargumentstions []*Argument, cmdline *CommandLine) CLICODE {
+				if len(parameters) == 0 {
+					//full
+					cmdline.SetVerbosity(-1)
+					return CLI_TRUE
+				}
+				return CLI_FALSE
+			}
+		}
+
+	case _defaultHistoryCommand:
+		{
+			return func(parameters []*Argument, arguments []*Argument, cmdline *CommandLine) CLICODE {
+				if len(parameters) == 0 {
+					cmdline.Set(HISTORY, CLI_TRUE)
+					return CLI_TRUE
+				}
+				return CLI_FALSE
+			}
+		}
+	case _defaultHistoryFileCommand:
+		{
+			return func(parameters []*Argument, arguments []*Argument, cmdline *CommandLine) CLICODE {
+				if len(parameters) == 0 {
+					cmdline.Set(HISTORYFILE, CLI_TRUE)
+					return CLI_TRUE
+				}
+				return CLI_FALSE
+			}
+		}
+	case _defaultShellCommand:
+		{
+			return func(parameters []*Argument, arguments []*Argument, cmdline *CommandLine) CLICODE {
+				if len(parameters) == 0 {
+					cmdline.Set(SHELL, CLI_TRUE)
+					return CLI_TRUE
+				}
+				return CLI_FALSE
+			}
+		}
+	case _defaultExitCommand:
+		{
+			return func(parameters []*Argument, arguments []*Argument, cmdline *CommandLine) CLICODE {
+
+				cmdline.Exit()
+
+				//TODO
+
+				return CLI_TRUE
+			}
+		}
+	case _defaultLOGGINGCommand:
+		{
+			return func(parameters []*Argument, arguments []*Argument, cmdline *CommandLine) CLICODE {
+
+				if len(parameters) == 0 {
+					cmdline.Set(LOGGING, CLI_TRUE)
+					return CLI_TRUE
+				}
+				return CLI_FALSE
+			}
+		}
+	case _defaultConfigFileCommand:
+		{
+			return func(parameters []*Argument, arguments []*Argument, cmdline *CommandLine) CLICODE {
+				if !cmdline._booted {
+					return CLI_FALSE
+				}
+				if len(parameters) == 1 {
+					cmdline.ReadJSON(parameters[0].GetValue().(string))
+				}
+				return CLI_FALSE
+			}
+		}
+	case _defaultBootOnlyCommand:
+		{
+			return func(parameters []*Argument, arguments []*Argument, cmdline *CommandLine) CLICODE {
+				if !cmdline._booted {
+					return CLI_FALSE
+				}
+				return CLI_FALSE
+			}
+		}
+	}
+	return nil
 }

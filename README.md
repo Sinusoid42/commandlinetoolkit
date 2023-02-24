@@ -1,5 +1,16 @@
 # Commandline Toolkit
 
+### v0.3.0
+
+-baseline option parsing is done, works from shell and from commandline
+-callbackfunctions + parameterized options available
+-todo: parameterized binary execution of 3rd. party binaries for full dynamic runtime possibilities
+
+
+### v0.2.0
+
+- checking of program file
+- parsing into parsetree and building parse api
 
 
 

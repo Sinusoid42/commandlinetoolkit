@@ -1,5 +1,4 @@
 {
-    "version": "0.0.5",
     "arguments": [
        {
           "flag": "help",
@@ -66,17 +65,15 @@
           "type": "OPTION"
        },
        {
-          "flag": "todo",
-          "type": "OPTION",
-          "arguments" : [
-             {
-                "type" : "PARAM"
-             }
-          ]
+        ,
+          "required": true,
+          "type": "PARAM",
+          "datatype" : "number[:40]"
        }
     ],
     "author": "ben",
     "description": "The description of the application",
     "executeable": "",
-    "man": "The Man Page for this application"
+    "man": "The Man Page for this application",
+    "version": "0.0.1"
  }

@@ -9,10 +9,12 @@ const HISTORY ATTRIBUTE = 0b00000000010
 const HISTORYFILE ATTRIBUTE = 0b00000000100
 const SUGGESTIONS ATTRIBUTE = 0b00000001000
 const PREDICTIONS ATTRIBUTE = 0b00000010000
+const LOGGING ATTRIBUTE = 0b00000100000
 
 var CLI_NULL CLICODE = 0b00000000000000
 
 const CLI_FALSE CLICODE = 0b000000000000
+const CLI_ERROR CLICODE = 0b000000000000
 
 /*
 NO commandline error was detected, exiting with status 0, just like any other binary program
@@ -40,7 +42,7 @@ const CLI_REQARGUMENTNOTFOUND_ERROR CLICODE = 0b00000000001000
 
 /*
 The provided data given to the commandline was incorrect
-Either the callback does not work, so you need to check your custom datatype callback for a given argument
+Either the callback does not work, so you need to checkInputProgram your custom datatype callback for a given argument
 Or you have to recheck your defined json file and read it again
 */
 const CLI_WRONGDATA_ERROR CLICODE = 0b00000000010000
@@ -70,14 +72,18 @@ Can be returned by a callback and will halt the stop execution of the entire pro
 */
 const CLI_RUNTIME_ERROR CLICODE = 0b00000010000000
 
+const CLI_LEXING_ERROR CLICODE = 0b00000100000000
+
 /*
 ***********************************************************************************************************************
 Interacrive Shell Mode
 
 providing a --interactive or -i when starting the commandline will lead to an executeable binary to keep running in a waitgroup shell struct
 that handles constant and continuous input via the commandline input structure, (in future that can be overwritten by using a restcall api)
+*
+	//see @defaults
+
 */
-const CLI_INTERACTIVE_MODE CLICODE = 0b00000100000000
 
 // when using the TAB and there is no predction available, usually we want to display all possible inputs for the given parse tree layer
 const CLI_NO_PREDICTION_ERROR CLICODE = 0b00001000000000

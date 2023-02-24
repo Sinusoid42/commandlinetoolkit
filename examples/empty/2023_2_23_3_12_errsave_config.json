@@ -1,5 +1,4 @@
 {
-    "version": "0.0.5",
     "arguments": [
        {
           "flag": "help",
@@ -66,12 +65,13 @@
           "type": "OPTION"
        },
        {
-          "flag": "todo",
-          "type": "OPTION"
+          "flag": "test",
+          "type": "OPTION | FLAG |COMMAND"
        }
     ],
     "author": "ben",
     "description": "The description of the application",
     "executeable": "",
-    "man": "The Man Page for this application"
+    "man": "The Man Page for this application",
+    "version": "0.0.1"
  }

@@ -151,11 +151,15 @@ func (s *shellHandler) GetParseKeys() []Key {
 
 func (s *shellHandler) set(attib ATTRIBUTE, clicode CLICODE) {
 	if clicode == CLI_SUCCESS {
-		s._attribs = attib
+		
+		//add attribute to the binary arg represenation
+		s._attribs |= attib
 	} else {
 		
+		//remove only the specified
 		attribs := ^attib & 0xFFFFFFF
 		
+		//update
 		s._attribs = s._attribs & attribs
 		
 	}
@@ -261,7 +265,7 @@ func (s *shellHandler) yesNoConfirm() bool {
 	
 	if s._currentInputBuffer[0] == Key('y') ||
 		s._currentInputBuffer[0] == Key('Y') ||
-		//last chat can be \n, so we check last - 1
+		//last chat can be \n, so we checkInputProgram last - 1
 		(len(s._currentInputBuffer) > 3 &&
 			(s._currentInputBuffer[len(s._currentInputBuffer)-2] == Key('y') ||
 				s._currentInputBuffer[len(s._currentInputBuffer)-2] == Key('Y'))) {
@@ -315,7 +319,7 @@ func (s *shellHandler) processState() bool {
 	
 	s.handleDelete()
 	
-	//check for arrow input
+	//checkInputProgram for arrow input
 	//handle arrow UP
 	
 	s.handleArrowUp()

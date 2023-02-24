@@ -1,6 +1,8 @@
 package commandlinetoolkit
 
-import "errors"
+import (
+	"errors"
+)
 
 // here we build and store the pseudo tree for the parser
 type parser struct {
@@ -9,10 +11,12 @@ type parser struct {
 	_parseTree *parsetree
 
 	Executeable string
+
+	d *debugHandler
 }
 
 func newparser() *parser {
-	return &parser{_parseTree: newparsetree()}
+	return &parser{_parseTree: newparsetree(), Executeable: "", d: newDebugHandler()}
 }
 
 // from here we also generate the JSON or read the JSON
@@ -20,11 +24,16 @@ func newparser() *parser {
 func (p *parser) parseProgram(prgm *program) (string, error) {
 
 	//after checking we most definately have a well formed tree
-	p._parseTree.build(prgm._program._theProgramJsonMap)
+	ok := p._parseTree.build(prgm._program._theProgramJsonMap)
 
+	if !ok {
+		p.d.printError("Could not build the parseTree\n...Aborting")
+		return "", errors.New("Could not build the parseTree\n...Aborting")
+	}
 	//first parse root
 	//recursively parse all other sub-arguments for n-node tree
-	return "", errors.New("todo")
+
+	return prgm._programTitle, nil
 }
 
 type StringParseable interface {
@@ -43,4 +52,13 @@ func check(query string, def string, m map[string]interface{}) string {
 		_str = def
 	}
 	return _str
+}
+
+func (p *parser) parse(args []string) (*parsetree, CLICODE) {
+
+	np, err := tokenize(p._parseTree, args)
+
+	//test
+	return np, err
+
 }

@@ -2,6 +2,7 @@ package commandlinetoolkit
 
 import (
 	`fmt`
+	`os`
 )
 
 //base file for building a commandline
@@ -10,7 +11,7 @@ import (
 //either by setting the paramters required or not,
 
 //const
-var VERSION = "0.1.1"
+var VERSION = "0.1.2"
 
 type CommandLine struct {
 	
@@ -47,6 +48,8 @@ type CommandLine struct {
 	
 	_logging bool
 	
+	_booted bool
+	
 	//available arguments in total
 	_size int32
 	
@@ -56,7 +59,8 @@ type CommandLine struct {
 	//amount of options
 	_options int32
 	
-	_enabled bool
+	_enabled    bool
+	_printTitle bool
 	
 	//run in verbose mode
 	_verbose      CLICODE
@@ -73,6 +77,7 @@ func NewCommandLine() *CommandLine {
 	cli := &CommandLine{
 		_parser:       newparser(),
 		_program:      newprogram("config.json"),
+		_debugHandler: newDebugHandler(),
 		_verbose:      0,
 		_enabledShell: false,
 		_verboseColor: COLOR_RED_I,
@@ -88,12 +93,19 @@ func (c *CommandLine) ReadJSON(path string) {
 	
 	c._program.readJsonProgram(path)
 	
-	c._program.check()
+	c._program.checkInputProgram()
+	
+	c._program.genTitle()
 	
 	if title, err := c._parser.parseProgram(c._program); err == nil {
+		
 		c._enabled = true
-		fmt.Print(title)
+		if c._printTitle {
+			fmt.Print(title)
+		}
+		
 	} else {
+		
 		fmt.Print(err)
 	}
 	
@@ -102,16 +114,13 @@ func (c *CommandLine) ReadJSON(path string) {
 func (c *CommandLine) Set(attrib ATTRIBUTE, clicode CLICODE) {
 	
 	c._shell.set(attrib, clicode)
-	if attrib&SHELL > 0 {
-		
-		//programmer has to implement a WAIT in the end
-		
-		if !c._enabledShell {
-			c._shell.run(c)
-		}
-		
+	
+	if c._shell._shellHandler.getAttributeCode(SHELL) == CLI_TRUE {
 		c._enabledShell = true
+	} else {
+		c._enabledShell = false
 	}
+	
 }
 
 func (c *CommandLine) GetCode(attrib ATTRIBUTE) CLICODE {
@@ -154,6 +163,14 @@ func (c CommandLine) String() string {
 	return "commandlinetoolkit"
 }
 
+func (c *CommandLine) Exit() {
+	if c._enabledShell {
+		c._shell._shellHandler._osHandler._wg.Done()
+		c._shell._shellHandler._osHandler._wg.Done()
+		
+	}
+}
+
 func (c *CommandLine) Parse(args []string) CLICODE {
 	
 	//program name is at args[0] always by definition
@@ -171,13 +188,52 @@ func (c *CommandLine) Parse(args []string) CLICODE {
 	//fmt.Println(c._parser._parseTree)
 	
 	if !c._enabled {
-		c._debugHandler.printError("-->Commandline: Not enabled, required is a cli program!")
+		c._debugHandler.printError("-->Commandline: Not enabled, required is a cli program!\n")
+		v := c._debugHandler._verbose
+		c._debugHandler._verbose = CLI_VERBOSE_DEBUG
+		c._verboseColor = COLOR_PINK_L
+		c.printVerbose("\nTo set a program, define a *.json file and run \n  --config=<myfile> or \n  --config <myfile>\n")
+		c._debugHandler._verbose = v
+		
+		if !c._enabledShell {
+			
+			v := c._debugHandler._verbose
+			c._debugHandler._verbose = CLI_VERBOSE_DEBUG
+			c._verboseColor = COLOR_GRAY_debug
+			c.printVerbose("\nshell not activated\naborting...\n")
+			c._debugHandler._verbose = v
+			
+			os.Exit(1)
+			
+		}
 	}
 	
-	if c._enabledShell {
-		c._shell.run(c)
-		
+	//fmt.Println(c._parser._parseTree)
+	
+	//we can only run this function as a user
+	
+	//i gereally expect this first to be either a binary or the mainfile or a caller
+	binaryFileName := args[0]
+	
+	c._program._programFile = binaryFileName
+	
+	arguments := args[1:]
+	
+	execTree, ok := c._parser.parse(arguments)
+	
+	if ok&CLI_SUCCESS == 0 {
+		c._debugHandler.printError("Unsuccessful\n")
 	}
+	
+	ok = execTree.execute(c)
+	
+	fmt.Println("EXEC: ", ok)
+	
+	/*
+		if c._enabledShell {
+			c._shell.run(c)
+	
+		}*/
 	return CLI_SUCCESS
 	
 }
@@ -192,6 +248,17 @@ func (c *CommandLine) runInteractive() {
 }
 
 func (c *CommandLine) Wait() {
+	
+	if c._shell._shellHandler._attribs&SHELL > 0 {
+		
+		//programmer has to implement a WAIT in the end
+		
+		if c._enabledShell {
+			c._shell.run(c)
+		}
+		
+		c._enabledShell = true
+	}
 	
 	c._shell.wait()
 	
@@ -211,7 +278,7 @@ func (c *CommandLine) checkPredictions(args []string, searchPrefix string, layer
 		
 	}
 	
-	// check available commands in the corresponding layer
+	// checkInputProgram available commands in the corresponding layer
 	if len(searchPrefix) == 1 && searchPrefix[0] == 'a' {
 		return "tabcompletion", CLI_SUCCESS
 	}
@@ -237,7 +304,14 @@ func (c *CommandLine) getSuggestions(args []string, layer int32) []string {
 Prints with the verbose color overlay
 */
 func (c *CommandLine) printVerbose(str interface{}) {
-	fmt.Print(c._verboseColor)
-	fmt.Print(str)
-	fmt.Print(COLOR_RESET)
+	c._debugHandler._verboseColor = c._verboseColor
+	c._debugHandler.printVerbose(CLI_VERBOSE_DEBUG, str)
+}
+
+func (c *CommandLine) SetVerbosity(code CLICODE) {
+
+}
+
+func (c *CommandLine) PrintTitle(print bool) {
+	c._printTitle = print
 }
