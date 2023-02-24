@@ -144,6 +144,7 @@ func (o *osHandler) removeTerminalBuffering() {
 
 func (o *osHandler) reset() {
 	setSttyState(bytes.NewBufferString("-raw"))
+	setSttyState(bytes.NewBufferString("echo"))
 }
 
 func numBytesAvailable() int {

@@ -109,6 +109,9 @@ func (c *CommandLine) ReadJSON(path string) {
 		fmt.Print(err)
 	}
 	
+	//print the parsetree after fully reading a configuration file or
+	//fmt.Println(c._parser._parseTree)
+	
 }
 
 func (c *CommandLine) Set(attrib ATTRIBUTE, clicode CLICODE) {
@@ -221,13 +224,14 @@ func (c *CommandLine) Parse(args []string) CLICODE {
 	
 	execTree, ok := c._parser.parse(arguments)
 	
-	if ok&CLI_SUCCESS == 0 {
+	if ok&CLI_SUCCESS == 0 && len(arguments) > 0 {
+		fmt.Println("\n")
 		c._debugHandler.printError("Unsuccessful\n")
 	}
 	
 	ok = execTree.execute(c)
 	
-	fmt.Println("EXEC: ", ok)
+	//fmt.Println("Run:", ok)
 	
 	/*
 		if c._enabledShell {

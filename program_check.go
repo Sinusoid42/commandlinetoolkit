@@ -227,6 +227,7 @@ func checkProgramMap(inputmap map[string]interface{}) (map[string]interface{}, b
 		if !_ok {
 			ok = _ok
 		}
+
 		_, _ok = checkCommand(theTypes[0], &resultmap, &inputmap)
 		if !_ok {
 			ok = _ok

@@ -472,7 +472,7 @@ func checkForFile(a *ArgumentDataType, str string) (any, bool) {
 
 		// Print the resulting string
 		textcontent := builder.String()
-
+		a.data = textcontent
 		file.Close()
 		return textcontent, true
 	}

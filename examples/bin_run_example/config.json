@@ -1,0 +1,78 @@
+{
+    "arguments": [
+       {
+          "flag": "help",
+          "help": "This is the default help message for the command line demo Execting the example binary, with ./mybinary --help this callback is executed. Can be overwritten",
+          "muteable": true,
+          "run": "exit",
+          "sflag": "h",
+          "shelp": "Only the short Help Menu.Use '--help' for more info.",
+          "type": "OPTION"
+       },
+       {
+          "datatype": "bool",
+          "flag": "interactive",
+          "help": "",
+          "muteable": false,
+          "run": "shell",
+          "shelp": "Interactive shell mode",
+          "type": "OPTION"
+       },
+       {
+          "datatype": "bool",
+          "flag": "logging",
+          "help": "In case we want to create a history file in which we store all previously executed commands",
+          "muteable": false,
+          "run": "logging",
+          "type": "OPTION"
+       },
+       {
+          "datatype": "bool",
+          "flag": "history",
+          "help": "Use and allow a current history when in interactive mode. Commands need to be rerunable",
+          "muteable": false,
+          "run": "history",
+          "type": "OPTION"
+       },
+       {
+          "datatype": "bool",
+          "flag": "historyfile",
+          "help": "Use and allow a historyfile for multiple executions of the shell, Commands can be reentered etc..",
+          "muteable": false,
+          "run": "historyfile",
+          "type": "OPTION"
+       },
+       {
+          "flag": "verbose",
+          "help": "Run the shell or the entire program in verbose mode. If a number is provided, different verbosities will be used. Can be overwritten.",
+          "muteable": true,
+          "run": "verbose",
+          "type": "OPTION"
+       },
+       {
+          "arguments": [
+             {
+                "datatype": "file",
+                "required": true,
+                "type": "PARAM"
+             }
+          ],
+          "datatype": "file",
+          "flag": "config",
+          "help": "Specifies a configuration file, from which commands will be parsed, can only be executed on booting the application",
+          "muteable": false,
+          "run": "configFile, bootonly",
+          "type": "OPTION"
+       },
+       {
+          "flag": "cool",
+          "run": "cool",
+          "type": "COMMAND"
+       }
+    ],
+    "author": "ben",
+    "description": "The description of the application",
+    "executeable": "",
+    "man": "The Man Page for this application",
+    "version": "0.0.1"
+ }
