@@ -1,7 +1,7 @@
 package main
 
 import (
-	"commandlinetoolkit"
+	"github.com/Sinusoid42/commandlinetoolkit"
 	"os"
 )
 

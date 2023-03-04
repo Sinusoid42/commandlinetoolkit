@@ -1,8 +1,8 @@
 package main
 
 import (
-	"commandlinetoolkit"
 	"fmt"
+	"github.com/Sinusoid42/commandlinetoolkit"
 )
 
 func main() {

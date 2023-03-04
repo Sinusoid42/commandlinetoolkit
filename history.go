@@ -196,7 +196,7 @@ Iterate the previous history in the present shell
 */
 func (h *history) iterateHistory(s *shellHandler) {
 
-	if s._attribs&HISTORY == 0 || !(h._enabledHistory && (s._arrowAction == 2 || s._arrowAction == 3)) {
+	if s._attribs&HISTORY == 0 || !h._enabledHistory || !(s._arrowAction == 2 || s._arrowAction == 3) {
 		return
 	}
 
@@ -238,13 +238,17 @@ func (h *history) iterateHistory(s *shellHandler) {
 }
 
 func (h *history) up() bool {
-	h._currHistoryIndex--
+	if h._enabledHistory {
+		h._currHistoryIndex--
+	}
 
 	return h._currHistoryIndex > 0
 }
 
 func (h *history) down() bool {
-	h._currHistoryIndex++
+	if h._enabledHistory {
+		h._currHistoryIndex++
+	}
 
 	return h._currHistoryIndex > 0
 }

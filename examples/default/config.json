@@ -65,7 +65,7 @@
    ],
    "author": "ben",
    "description": "The description of the application",
-   "executeable": "ashash,
+   "executeable": "ashash",
    "man": "The Man Page for this application",
    "version": "0.0.5"
 }

@@ -152,11 +152,8 @@ func (a *argnode) tokenizeArg(args []string) (*argnode, bool) {
 			}
 
 			args = newargs
-
 		}
-
 		index++
-
 	}
 	return node, false
 }
