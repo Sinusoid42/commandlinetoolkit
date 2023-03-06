@@ -27,18 +27,8 @@ type program struct {
 	_debugHandler *debugHandler
 }
 
-type programArgs struct {
-	hasInteractiveOption       bool
-	hasLoggingOption           bool
-	hasHistoryOption           bool
-	hasHelpOption              bool
-	hasHistoryFileOption       bool
-	hasConfigurationFileOption bool
-	hasVerbosityOption         bool
-}
-
 /*
-********************************************************************
+****************************************************************************************************************************************
 
 Builds a new Program
 */
@@ -58,7 +48,7 @@ func newprogram(filename string) *program {
 }
 
 /*
-********************************************************************
+****************************************************************************************************************************************
 
 Read a json cli configuration file
 */
@@ -123,7 +113,7 @@ func (p *program) readJsonProgram(filename string) string {
 }
 
 /*
-********************************************************************
+****************************************************************************************************************************************
 
 Write the json to disc
 */
@@ -144,6 +134,11 @@ func (p *program) writeJsonProgram() {
 	_programFile.Close()
 }
 
+/*
+****************************************************************************************************************************************
+
+Generate a Programtitle that is colorful and looks cool based on given paramters of the program
+*/
 func (p *program) genTitle() string {
 
 	name := "ProgramTitle"

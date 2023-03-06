@@ -172,7 +172,7 @@ func (s *shellHandler) set(attib ATTRIBUTE, clicode CLICODE) {
 
 	if s._attribs&HISTORYFILE > 0 {
 		if s._attribs&HISTORY == 0 {
-			s._debugHandler.printError("  Historyfile not possible, \n   need to enable History first\n")
+			s._debugHandler.printError("   Historyfile not possible:\n   Need to enable History first\n")
 		} else {
 			s._history._enabledHistoryFile = true
 		}
@@ -297,6 +297,7 @@ func (s *shellHandler) handleClear() {
 func (s *shellHandler) handleHistory() {
 
 	s._history.append(string(s._currentInputBuffer))
+	s._history._currentHistoryBufferLength++
 
 }
 

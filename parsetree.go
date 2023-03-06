@@ -110,7 +110,6 @@ func (a *argnode) tokenizeArg(args []string) (*argnode, bool) {
 				none = true
 				index = 0
 			} else {
-
 				break
 			}
 
@@ -128,7 +127,6 @@ func (a *argnode) tokenizeArg(args []string) (*argnode, bool) {
 			}
 
 			if ok && len(newargs) == 0 {
-
 				return node, true
 			}
 
@@ -164,12 +162,14 @@ func tokenizeOption(a *argnode, args []string) (*argnode, []string, bool) {
 		return nil, args, false
 	}
 
-	if len(a._arg.lflag) > 0 && strings.Index(args[0], FULLOPTIONPREFIX+a._arg.lflag) == 0 {
+	if len(a._arg.lflag) > 0 && strings.Compare(args[0], FULLOPTIONPREFIX+a._arg.lflag) == 0 {
 		ok = true
 	}
-	if len(a._arg.sflag) > 0 && strings.Index(args[0], SHORTOPTIONPREFIX+a._arg.sflag) == 0 {
+	if len(a._arg.sflag) > 0 && strings.Compare(args[0], SHORTOPTIONPREFIX+a._arg.sflag) == 0 {
 		ok = true
 	}
+
+	fmt.Println(args[0], ok, a._arg.lflag)
 	if !ok {
 		return nil, args, false
 	}
@@ -336,6 +336,7 @@ func (n *argnode) execute(cmdline *CommandLine) CLICODE {
 
 			oparams := []*Argument{}
 			oargs := []*Argument{}
+
 			for _, p := range cmd._sub {
 				if p._arg.arg_type&PARAMETER > 0 {
 					oparams = append(oparams, p._arg.copy())

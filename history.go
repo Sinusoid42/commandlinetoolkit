@@ -18,7 +18,8 @@ type history struct {
 	_bufferedLines [][]byte
 	_keyLines      [][]Key
 
-	_currHistoryIndex int
+	_currHistoryIndex           int
+	_currentHistoryBufferLength int
 
 	_enabledHistoryFile bool
 	_enabledHistory     bool
@@ -201,8 +202,13 @@ func (h *history) iterateHistory(s *shellHandler) {
 	}
 
 	linputs := len(s._previnputs)
+	index := linputs
+	if !h._enabledHistoryFile {
 
-	if h._currHistoryIndex >= 0 && linputs > h._currHistoryIndex {
+		index = h._currentHistoryBufferLength
+	}
+
+	if h._currHistoryIndex >= 0 && index > h._currHistoryIndex {
 
 		s._inputDisplayBuffer = []Key{}
 

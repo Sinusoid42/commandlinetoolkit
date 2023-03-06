@@ -168,10 +168,18 @@ func splitBySeperator(str []string) []string {
 	//split
 	if strings.Contains(str[0], "|") {
 		str = strings.Split(str[0], "|")
-	}
-
-	if strings.Contains(str[0], ",") {
+	} else if strings.Contains(str[0], ",") {
 		str = strings.Split(str[0], ",")
+	} else if strings.Contains(str[0], " ") {
+		d := newDebugHandler()
+
+		s := "Multitype Error\n\""
+		for _, k := range str {
+			s += k
+		}
+		s += "\"\n"
+		d.printError(s)
+		return []string{}
 	}
 
 	for i, s := range str {

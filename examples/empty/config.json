@@ -65,10 +65,16 @@
           "type": "OPTION"
        },
        {
-          "datatype": "number[:40]",
-          "help": "THE HELP",
+          "arguments": [
+             {
+                "datatype": "file",
+                "type": "PARAM"
+             }
+          ],
+          "datatype": "file",
+          "flag": "type",
           "required": true,
-          "type": "PARAM"
+          "type": "OPTION | WILDCARD"
        }
     ],
     "author": "ben",

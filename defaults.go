@@ -1,5 +1,7 @@
 package commandlinetoolkit
 
+import "fmt"
+
 // when checking a given command|option template, we checkInputProgram in the program, if any of the required or optional commands are present
 // if not, they will be overwritten in the config file
 // if optional and present, they will not be overwritten
@@ -203,6 +205,7 @@ func getRunCommand(str string) func(parameters []*Argument, arguments []*Argumen
 		{
 			return func(parameters []*Argument, arguments []*Argument, cmdline *CommandLine) CLICODE {
 				if len(parameters) == 0 {
+					fmt.Println("SETTING HISTORY")
 					cmdline.Set(HISTORY, CLI_TRUE)
 					return CLI_TRUE
 				}
@@ -213,6 +216,7 @@ func getRunCommand(str string) func(parameters []*Argument, arguments []*Argumen
 		{
 			return func(parameters []*Argument, arguments []*Argument, cmdline *CommandLine) CLICODE {
 				if len(parameters) == 0 {
+					fmt.Println("SETTING HISTORYFILE")
 					cmdline.Set(HISTORYFILE, CLI_TRUE)
 					return CLI_TRUE
 				}
