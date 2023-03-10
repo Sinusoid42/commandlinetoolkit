@@ -22,3 +22,14 @@ func (s *settings) build(m map[string]interface{}) {
 	s.executeable = check(EXECUTEABLEKEY, "Executeable", m)
 
 }
+
+func (s *settings) clone() *settings {
+	ns := &settings{
+		version:     s.version,
+		author:      s.author,
+		executeable: s.executeable,
+		description: s.description,
+		man:         s.man,
+	}
+	return ns
+}

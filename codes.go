@@ -1,15 +1,11 @@
 package commandlinetoolkit
 
+/*
+****************************************************************************************************************************************
+
+Error Codes or Program Execution Codes within the entire Commandline
+*/
 type CLICODE int32
-
-type ATTRIBUTE int32
-
-const SHELL ATTRIBUTE = 0b00000000001
-const HISTORY ATTRIBUTE = 0b00000000010
-const HISTORYFILE ATTRIBUTE = 0b00000000100
-const SUGGESTIONS ATTRIBUTE = 0b00000001000
-const PREDICTIONS ATTRIBUTE = 0b00000010000
-const LOGGING ATTRIBUTE = 0b00000100000
 
 var CLI_NULL CLICODE = 0b00000000000000
 

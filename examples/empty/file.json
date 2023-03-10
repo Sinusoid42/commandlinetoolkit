@@ -85,27 +85,8 @@
           "flag": "config",
           "help": "Specifies a configuration file, from which commands will be parsed, can only be executed on booting the application",
           "muteable": false,
-          "run": "config, bootonly",
+          "run": "config, bootonly, exit",
           "type": "OPTION"
-       },
-       {
-          "arguments": [
-             {
-                "arguments": [
-                   {
-                      "datatype": "file",
-                      "required": false,
-                      "type": "PARAM"
-                   }
-                ],
-                "datatype": "number",
-                "required": false,
-                "type": "PARAM"
-             }
-          ],
-          "datatype": "number",
-          "flag": "type",
-          "type": "OPTION | WILDCARD"
        }
     ],
     "author": "ben",

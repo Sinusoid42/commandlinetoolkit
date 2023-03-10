@@ -10,6 +10,8 @@ type parser struct {
 	//the tree of all the nodes from the configuration
 	_parseTree *parsetree
 
+	_executeableTree *parsetree
+
 	Executeable string
 
 	d *debugHandler

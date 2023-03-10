@@ -114,7 +114,7 @@ func (c *CommandLine) ReadJSON(path string) {
 	
 }
 
-func (c *CommandLine) Set(attrib ATTRIBUTE, clicode CLICODE) {
+func (c *CommandLine) Set(attrib PROGRAM_ARGUMENT, clicode CLICODE) {
 	
 	c._shell.set(attrib, clicode)
 	
@@ -126,14 +126,14 @@ func (c *CommandLine) Set(attrib ATTRIBUTE, clicode CLICODE) {
 	
 }
 
-func (c *CommandLine) GetCode(attrib ATTRIBUTE) CLICODE {
+func (c *CommandLine) GetCode(attrib PROGRAM_ARGUMENT) CLICODE {
 	if c._enabledShell {
 		return CLI_SUCCESS
 	}
 	return c._shell.getCode(attrib)
 }
 
-func (c *CommandLine) Get() ATTRIBUTE {
+func (c *CommandLine) Get() PROGRAM_ARGUMENT {
 	if c._enabledShell {
 		return c._shell.get() | SHELL
 	}
@@ -188,8 +188,6 @@ func (c *CommandLine) Parse(args []string) CLICODE {
 	
 	//fmt.Println("DONE:..")
 	
-	//fmt.Println(c._parser._parseTree)
-	
 	if !c._enabled {
 		c._debugHandler.printError("-->Commandline: Not enabled, required is a cli program!\n")
 		v := c._debugHandler._verbose
@@ -224,11 +222,13 @@ func (c *CommandLine) Parse(args []string) CLICODE {
 	
 	execTree, ok := c._parser.parse(arguments)
 	
+	c._parser._executeableTree = execTree
+	
 	if ok&CLI_SUCCESS == 0 && len(arguments) > 0 {
 		fmt.Println("\n")
 		c._debugHandler.printError("Unsuccessful\n")
 	}
-	
+	//fmt.Println(execTree)
 	ok = execTree.execute(c)
 	
 	//fmt.Println("Run:", ok)
@@ -302,6 +302,20 @@ func (c *CommandLine) numberOfSuggestions(args []string, layer int32) int {
 
 func (c *CommandLine) getSuggestions(args []string, layer int32) []string {
 	return nil
+}
+
+func (c *CommandLine) Program() *parsetree {
+	
+	p := c._parser._parseTree.clone()
+	
+	return p
+}
+
+func (c *CommandLine) ParseTree() *parsetree {
+	
+	p := c._parser._executeableTree.clone()
+	
+	return p
 }
 
 /**

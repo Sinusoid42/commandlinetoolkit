@@ -3,6 +3,7 @@ package commandlinetoolkit
 import (
 	"bufio"
 	"encoding/json"
+	"fmt"
 	"os"
 	"strings"
 )
@@ -22,6 +23,7 @@ type program struct {
 	_programFile  string
 	_programTitle string
 	_titleLength  int
+	_programDepth int
 	_program      *commandlinetemplate
 	_verbose      CLICODE
 	_debugHandler *debugHandler
@@ -56,6 +58,8 @@ func (p *program) readJsonProgram(filename string) string {
 
 	//checkInputProgram for file forst
 	if _, err := os.OpenFile(filename, os.O_RDONLY, 0666); err != nil {
+
+		fmt.Println(filename)
 		filename = p._programFile
 		p._debugHandler.printError("-->readJson: File not available, falling back to default\n")
 	}

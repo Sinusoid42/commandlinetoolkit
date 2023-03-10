@@ -62,15 +62,15 @@ func (s *shell) log(input string) {
 
 }
 
-func (s *shell) set(attrib ATTRIBUTE, clicode CLICODE) {
+func (s *shell) set(attrib PROGRAM_ARGUMENT, clicode CLICODE) {
 	s._shellHandler.set(attrib, clicode)
 }
 
-func (s *shell) get() ATTRIBUTE {
+func (s *shell) get() PROGRAM_ARGUMENT {
 	return s._shellHandler.getAttributes()
 }
 
-func (s *shell) getCode(attrib ATTRIBUTE) CLICODE {
+func (s *shell) getCode(attrib PROGRAM_ARGUMENT) CLICODE {
 	
 	return s._shellHandler.getAttributeCode(attrib)
 }
@@ -124,7 +124,7 @@ func (s *shell) run(cmdline *CommandLine) {
 				s._shellHandler.handleHistory()
 				
 				if s.stringInputBuffer() == "test" {
-					fmt.Print("\nHAHA")
+					//fmt.Print("\nHAHA")
 					
 				}
 				

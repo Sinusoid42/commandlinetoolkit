@@ -23,9 +23,28 @@ const (
 	_defaultShellCommand              = "shell"
 	_defaultExitCommand               = "exit"
 	_defaultLOGGINGCommand            = "logging"
-	_defaultConfigFileCommand         = "configFile"
+	_defaultConfigFileCommand         = "config"
 	_defaultBootOnlyCommand           = "bootonly"
 )
+
+type RUNPROPERTY int32
+
+// runs the command in verbose
+const VERBOSITYPROPERTY RUNPROPERTY = 0b0000000000000000001
+const EXITPROPERTY RUNPROPERTY = 0b00000000000000000010
+const BOOTONLYPROPERTY RUNPROPERTY = 0b000000000000000000100
+
+type RUNCOMMAND int32
+
+const RUNINTERACTIVE RUNCOMMAND = 0b0000000000000000001
+const RUNLOGGING RUNCOMMAND = 0b0000000000000000001
+const RUNHISTORY RUNCOMMAND = 0b0000000000000000001
+const RUNHISTORYFILE RUNCOMMAND = 0b0000000000000000001
+const RUNHELP RUNCOMMAND = 0b0000000000000000001
+const RUNCONFIG RUNCOMMAND = 0b0000000000000000001
+
+// turns the entire shell verbose
+const RUNVERBOSE RUNCOMMAND = 0b0000000000000000001
 
 // store the default arguments in global scope buffer, when rereading or rebuilding the program during runtime
 var (
@@ -121,7 +140,7 @@ func defaultConfigurationFileOption() map[string]interface{} {
 	m[LONGFLAGKEY] = "config"
 	m[MUTEABLEKEY] = false
 	m[HELPKEY] = "Specifies a configuration file, from which commands will be parsed, can only be executed on booting the application"
-	m[RUNKEY] = "configFile, bootonly"
+	m[RUNKEY] = "config, bootonly"
 	m[DATATYPEKEY] = "file"
 	m[ARGUMENTSKEY] = []map[string]interface{}{}
 
@@ -149,6 +168,7 @@ func defaultVerbosityOption() map[string]interface{} {
 }
 
 func isLibCommand(str string) bool {
+
 	switch str {
 	case _defaultVerbosityCommand:
 		{
@@ -205,7 +225,7 @@ func getRunCommand(str string) func(parameters []*Argument, arguments []*Argumen
 		{
 			return func(parameters []*Argument, arguments []*Argument, cmdline *CommandLine) CLICODE {
 				if len(parameters) == 0 {
-					fmt.Println("SETTING HISTORY")
+
 					cmdline.Set(HISTORY, CLI_TRUE)
 					return CLI_TRUE
 				}
@@ -216,7 +236,6 @@ func getRunCommand(str string) func(parameters []*Argument, arguments []*Argumen
 		{
 			return func(parameters []*Argument, arguments []*Argument, cmdline *CommandLine) CLICODE {
 				if len(parameters) == 0 {
-					fmt.Println("SETTING HISTORYFILE")
 					cmdline.Set(HISTORYFILE, CLI_TRUE)
 					return CLI_TRUE
 				}
@@ -230,6 +249,12 @@ func getRunCommand(str string) func(parameters []*Argument, arguments []*Argumen
 					cmdline.Set(SHELL, CLI_TRUE)
 					return CLI_TRUE
 				}
+
+				if parameters[0].GetValue() == true {
+					cmdline.Set(SHELL, CLI_TRUE)
+					return CLI_TRUE
+				}
+
 				return CLI_FALSE
 			}
 		}
@@ -258,11 +283,13 @@ func getRunCommand(str string) func(parameters []*Argument, arguments []*Argumen
 	case _defaultConfigFileCommand:
 		{
 			return func(parameters []*Argument, arguments []*Argument, cmdline *CommandLine) CLICODE {
+
 				if !cmdline._booted {
 					return CLI_FALSE
 				}
 				if len(parameters) == 1 {
-					cmdline.ReadJSON(parameters[0].GetValue().(string))
+					fmt.Println("\n" + string(COLOR_CYAN) + "Reading config file..." + string(COLOR_RESET))
+					cmdline.ReadJSON(parameters[0].GetValue().([]string)[0])
 				}
 				return CLI_FALSE
 			}
@@ -278,4 +305,92 @@ func getRunCommand(str string) func(parameters []*Argument, arguments []*Argumen
 		}
 	}
 	return nil
+}
+
+func getRunCommands(cmds []string) func(parameters []*Argument, arguments []*Argument, cmdline *CommandLine) CLICODE {
+
+	runProperties := retrieveRunProperties(cmds)
+	runCmd := retrieveRunCommand(cmds)
+
+	return func(parameters []*Argument, arguments []*Argument, cmdline *CommandLine) CLICODE {
+
+		if runProperties&BOOTONLYPROPERTY > 0 {
+			if cmdline._booted {
+
+				return CLI_FALSE
+			}
+		}
+
+		if runProperties&VERBOSITYPROPERTY > 0 {
+			if len(parameters) == 0 {
+				//full
+
+				cmdline.SetVerbosity(-1)
+
+			}
+		}
+
+		//TODO
+		if runCmd&RUNCONFIG > 0 {
+
+			if len(parameters) == 1 {
+				fmt.Println("\n" + string(COLOR_CYAN) + "Reading config file..." + string(COLOR_RESET))
+				fmt.Println(parameters[0].GetValue().([]string)[0])
+				cmdline.ReadJSON(parameters[0].GetValue().([]string)[0])
+			}
+		}
+		if runProperties&VERBOSITYPROPERTY > 0 {
+			if len(parameters) == 0 {
+
+				cmdline.SetVerbosity(0)
+			}
+		}
+		if runProperties&EXITPROPERTY > 0 {
+			cmdline.Exit()
+		}
+
+		return CLI_TRUE
+	}
+}
+
+func retrieveRunProperties(cmds []string) RUNPROPERTY {
+	property := RUNPROPERTY(0)
+	for _, s := range cmds {
+
+		if s == _defaultBootOnlyCommand {
+			property |= BOOTONLYPROPERTY
+		}
+		if s == _defaultVerbosityCommand {
+			property |= VERBOSITYPROPERTY
+		}
+		if s == _defaultExitCommand {
+			property |= EXITPROPERTY
+		}
+	}
+	return property
+}
+
+func retrieveRunCommand(cmds []string) RUNCOMMAND {
+	r := RUNCOMMAND(0)
+	for _, s := range cmds {
+		if s == _defaultInteractiveOption {
+			r |= RUNINTERACTIVE
+		}
+		if s == _defaultShellCommand {
+			r |= RUNINTERACTIVE
+		}
+		if s == _defaultHistoryCommand {
+			r |= RUNHISTORY
+		}
+		if s == _defaultHistoryFileCommand {
+			r |= RUNHISTORYFILE
+		}
+		if s == _defaultLOGGINGCommand {
+			r |= RUNLOGGING
+		}
+		if s == _defaultConfigFileCommand {
+			r |= RUNCONFIG
+		}
+	}
+	return r
 }

@@ -122,6 +122,7 @@ type Argument struct {
 func NewArgument(m map[string]interface{}) (*Argument, error) {
 	//checkInputProgram the argument type first
 	argType, err := decodeArgType(m)
+
 	if err != nil {
 		d := newDebugHandler()
 		d.printError("-->Error: ParseTree: decodeArgType")
@@ -161,12 +162,17 @@ func NewArgument(m map[string]interface{}) (*Argument, error) {
 		arg, err = createParameterArgument(argType, m)
 
 	}
+
 	return arg, err
 }
 
 func (a *Argument) GetValue() any {
 
-	return nil
+	if a.data_type == nil {
+		return nil
+	}
+
+	return a.data_type.data
 
 }
 
@@ -175,6 +181,7 @@ func (a *Argument) copy() *Argument {
 	arg := &Argument{
 		arg_type: a.arg_type,
 		data_type: &ArgumentDataType{
+			data:                  a.data_type.data,
 			data_flag:             a.data_type.data_flag,
 			attrib:                a.data_type.attrib,
 			dtype_custom_callback: a.data_type.dtype_custom_callback,
@@ -211,7 +218,6 @@ func createOptionArgument(argType ArgumentType, m map[string]interface{}) (*Argu
 		arg_type: argType,
 		lflag:    longFlag,
 	}
-
 	if shortFlag, _ok := m[SHORTFLAGKEY].(string); _ok {
 		arg.sflag = shortFlag
 	}
@@ -234,11 +240,21 @@ func createOptionArgument(argType ArgumentType, m map[string]interface{}) (*Argu
 	}
 	if runCmd, _ok := m[RUNKEY].(string); _ok {
 		arg.runCommand = runCmd
-		if isLibCommand(runCmd) {
-			arg.run = getRunCommand(runCmd)
+
+		if strings.ContainsAny(runCmd, ",") {
+			cmds := strings.Split(runCmd, ", ")
+			for i, c := range cmds {
+				cmds[i] = c
+			}
+			arg.run = getRunCommands(cmds)
 		} else {
-			arg.run = nil
+			if isLibCommand(runCmd) {
+				arg.run = getRunCommand(runCmd)
+			} else {
+				arg.run = nil
+			}
 		}
+
 	}
 	return arg, nil
 }
@@ -424,36 +440,51 @@ func createArgDataType(dtype string) *ArgumentDataType {
 }
 
 func argTypeToString(argumentType ArgumentType) string {
-	switch argumentType {
-	case OPTION:
-		{
-			return OPTIONSTRING
-		}
-	case COMMAND:
-		{
-			return COMMANDSTRING
-		}
-	case WILDCARD:
-		{
-			return WILDCARDSTRING
-		}
-	case FLAG:
-		{
-			return FLAGSTRING
-		}
-	case PARAMETER:
-		{
-			return PARAMETERSTRING
-		}
+	s := ""
+
+	if argumentType&OPTION > 0 {
+		s += OPTIONSTRING
 	}
-	return ""
+	if argumentType&COMMAND > 0 {
+		if len(s) > 0 {
+			s += " | "
+		}
+		s += COMMANDSTRING
+	}
+	if argumentType&WILDCARD > 0 {
+		if len(s) > 0 {
+			s += " | "
+		}
+		s += WILDCARDSTRING
+	}
+	if argumentType&FLAG > 0 {
+		if len(s) > 0 {
+			s += " | "
+		}
+		s += FLAGSTRING
+	}
+	if argumentType&PARAMETER > 0 {
+		if len(s) > 0 {
+			s += " | "
+		}
+		s += PARAMETERSTRING
+	}
+
+	return s
 }
 
 func (a *Argument) String() string {
 
+	s := ""
+	if a.data_type != nil {
+		s = "   dtype: " + a.data_type.data_flag + "\n"
+	}
+
 	return "Argument:{\n" +
 		"   type: " + argTypeToString(a.arg_type) + "\n" +
-		"   flag: " + a.lflag + "\n" +
+		"   flag: " + a.lflag + "\n" + s +
+		"   required: " + strconv.FormatBool(a.required) + "\n" +
+		"   muteable: " + strconv.FormatBool(a.required) + "\n" +
 		"}"
 }
 
@@ -474,7 +505,11 @@ func checkForFile(a *ArgumentDataType, str string) (any, bool) {
 		textcontent := builder.String()
 		a.data = textcontent
 		file.Close()
-		return textcontent, true
+
+		s := []string{}
+		s = append(s, str)
+		s = append(s, textcontent)
+		return s, true
 	}
 
 	return "", false
@@ -506,25 +541,30 @@ func checkForNumber(a *ArgumentDataType, str string) (any, bool) {
 			return floatNbr, true
 		}
 	}
+	if len(str) < 1 {
+		return 0, false
+	}
 	bounds := strings.Split(a.attrib, ":")
+	if len(bounds) > 1 {
+		bounds[0] = strings.TrimPrefix(bounds[0], "[")
+		bounds[1] = strings.TrimSuffix(bounds[1], "]")
+		min, ok := strconv.ParseFloat(bounds[0], 32)
 
-	bounds[0] = strings.TrimPrefix(bounds[0], "[")
-	bounds[1] = strings.TrimSuffix(bounds[1], "]")
-	min, ok := strconv.ParseFloat(bounds[0], 32)
+		if ok != nil {
+			min = 0
+		}
+		max, ok := strconv.ParseFloat(bounds[1], 32)
+		if ok != nil {
+			min = 0
+		}
+		if intNbr, ok := strconv.Atoi(str); ok == nil {
+			return intNbr, intNbr >= int(min) && intNbr <= int(max)
+		}
+		if floatNbr, ok := strconv.ParseFloat(str, 32); ok == nil {
+			return floatNbr, floatNbr >= min && floatNbr <= max
+		}
+	}
 
-	if ok != nil {
-		min = 0
-	}
-	max, ok := strconv.ParseFloat(bounds[1], 32)
-	if ok != nil {
-		min = 0
-	}
-	if intNbr, ok := strconv.Atoi(str); ok == nil {
-		return intNbr, intNbr >= int(min) && intNbr <= int(max)
-	}
-	if floatNbr, ok := strconv.ParseFloat(str, 32); ok == nil {
-		return floatNbr, floatNbr >= min && floatNbr <= max
-	}
 	return 0.0, false
 }
 

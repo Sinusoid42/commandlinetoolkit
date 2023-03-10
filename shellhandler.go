@@ -25,7 +25,7 @@ type shellHandler struct {
 
 	_exit int
 
-	_attribs ATTRIBUTE
+	_attribs PROGRAM_ARGUMENT
 
 	/********************
 	  state machine
@@ -149,7 +149,7 @@ func (s *shellHandler) GetParseKeys() []Key {
 	return s._currentInputBuffer
 }
 
-func (s *shellHandler) set(attib ATTRIBUTE, clicode CLICODE) {
+func (s *shellHandler) set(attib PROGRAM_ARGUMENT, clicode CLICODE) {
 	if clicode == CLI_SUCCESS {
 
 		//add attribute to the binary arg represenation
@@ -194,9 +194,9 @@ func (s *shellHandler) set(attib ATTRIBUTE, clicode CLICODE) {
 
 }
 
-func (s *shellHandler) getAttributes() ATTRIBUTE {
+func (s *shellHandler) getAttributes() PROGRAM_ARGUMENT {
 
-	attrib := ATTRIBUTE(0)
+	attrib := PROGRAM_ARGUMENT(0)
 
 	if s._history._enabledHistoryFile {
 		attrib |= HISTORYFILE
@@ -215,7 +215,7 @@ func (s *shellHandler) getAttributes() ATTRIBUTE {
 
 }
 
-func (s *shellHandler) getAttributeCode(attrib ATTRIBUTE) CLICODE {
+func (s *shellHandler) getAttributeCode(attrib PROGRAM_ARGUMENT) CLICODE {
 	if s._attribs&attrib > 0 {
 		return CLI_TRUE
 	}
@@ -433,13 +433,13 @@ func (s *shellHandler) handleArrowDown() {
 		s.clearCurrentLine()
 
 		s._debugHandler.printVerbose(CLI_VERBOSE_SHELL, "\n-->shell: Arrow down")
-		s.printPrefix()
+		//s.printPrefix()
 
 		//s.moveRight()
 
 		if !s._history.up() {
 			s.clearCurrentLine()
-			s.printPrefix()
+			//s.printPrefix()
 		}
 
 	}
@@ -469,7 +469,7 @@ func (s *shellHandler) handleArrowUp() {
 
 		s._debugHandler.printVerbose(CLI_VERBOSE_SHELL, "\n-->shell: Arrow up")
 
-		s.printPrefix()
+		//s.printPrefix()
 
 		//s.moveRight()
 
@@ -494,7 +494,7 @@ func (s *shellHandler) requestSuggestionsOnTab() {
 
 		s._consumed = true
 		fmt.Print("There are " + strconv.Itoa(s.cmdline.numberOfSuggestions(strings.Split(string(s._currentInputBuffer), " "), s._parseDepth)) + " available Options. \nDisplay? y/n?\n")
-		s.printPrefix()
+		//s.printPrefix()
 	}
 
 	s._requestSuggestions = true
@@ -544,8 +544,7 @@ func (s *shellHandler) read() {
 
 	s._debugHandler.debugBuffer(s._inputDisplayBuffer)
 	if s._debugHandler._verbose&CLI_VERBOSE_SHELL_BUFFER > 0 || s._debugHandler._verbose&CLI_VERBOSE_DEBUG > 0 {
-		fmt.Print("\n")
-		s.printPrefix()
+		s.newLine()
 	}
 }
 
