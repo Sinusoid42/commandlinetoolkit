@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-const verbose = false
+const verbose = true
 
 /*
 **********************************************************************
@@ -15,15 +15,15 @@ tokenize the input from arguments, given by the os or the shell
 build a tree recurively
 */
 func tokenize(p *parsetree, args []string) (*parsetree, CLICODE) {
-	np := newparsetree()
+	newPareTree := newparsetree()
 	r := p._root
 	if r._sub == nil {
-		return np, CLI_LEXING_ERROR
+		return newPareTree, CLI_LEXING_ERROR
 	}
-	code := CLI_ERROR
+	code := CLICODE(0)
 
 	if len(args) == 0 {
-		return np, CLI_SUCCESS
+		return newPareTree, CLI_SUCCESS
 	}
 
 	/*
@@ -33,17 +33,23 @@ func tokenize(p *parsetree, args []string) (*parsetree, CLICODE) {
 		ok: the current subtree was successfully parsed
 		skip: the current
 	*/
-	args, newArg, ok, skip := r.tokenizeArg(args)
+	args, rootArgument, ok, skip := r.tokenizeArg(args)
+
+	if len(args) > 0 {
+		fmt.Println(string(COLOR_YELLOW_I) + "unrecognized argument(s).." + string(COLOR_RESET))
+		for _, a := range args {
+			fmt.Println(string(COLOR_YELLOW_I) + a + string(COLOR_RESET))
+		}
+	}
 
 	if !ok && skip {
 		//fmt.Println(newArg)
 	} else {
 		code = CLI_SUCCESS
 	}
-	np._root = newArg
+	newPareTree._root = rootArgument
 
-	//fmt.Println("NEW Parsetree", np)
-	return np, code
+	return newPareTree, code
 }
 
 /*
@@ -58,6 +64,11 @@ func (a *argnode) tokenizeArg(args []string) ([]string, *argnode, bool, bool) {
 	newArgumentNode := newNode(nil)
 
 	newArgumentNode._depth = 1
+	ok := false
+	skip := false
+	argindex := 0
+	subArgument := &argnode{}
+	scan := 0
 
 	if verbose {
 		fmt.Println(string(COLOR_YELLOW_I) + ">>>>>>>>:::::::::: INPUT ::::::::::<<<<<<<<" + string(COLOR_RESET))
@@ -68,18 +79,17 @@ func (a *argnode) tokenizeArg(args []string) ([]string, *argnode, bool, bool) {
 	//debugging
 
 	if a._sub == nil || len(a._sub) == 0 {
-		return args, newArgumentNode, false, true
+		skip = true
+		return args, newArgumentNode, ok, skip
 	}
 
-	ok := false
-	skip := false
-	argindex := 0
-	subArgument := &argnode{}
-	scan := 0
+	/*
+		Local layer parsing variables in the function Scope
+	*/
 
 	for a._sub != nil && len(a._sub) > 0 {
 
-		//time.Sleep(1 * time.Second)
+		//allow proper debugging in verbose mode
 		if verbose {
 			bufio.NewScanner(os.Stdin).Scan()
 		}
@@ -115,7 +125,6 @@ func (a *argnode) tokenizeArg(args []string) ([]string, *argnode, bool, bool) {
 			if verbose {
 				fmt.Println(string(COLOR_PINK_I) + ":::::::::: AFTER Tokenize Option ::::::::::" + string(COLOR_RESET))
 				fmt.Println(newarg, newargs, _ok, _skip)
-
 			}
 
 			args = newargs
@@ -155,7 +164,7 @@ func (a *argnode) tokenizeArg(args []string) ([]string, *argnode, bool, bool) {
 				fmt.Println(newarg, newargs, _ok, _skip)
 			}
 
-			if a != nil && newarg != nil && _ok {
+			if newarg != nil && _ok {
 				args = newargs
 				scan = 0
 				newarg._parent = newArgumentNode
@@ -319,6 +328,11 @@ func tokenizeOption(a *argnode, args []string) (*argnode, []string, bool, bool) 
 	return newOptionArgument, args, ok, skip
 }
 
+/*
+Peek into a command, check that the binary file is also available when running, get all following arguments,
+
+	if there is a single other trailing command given, then all trailing args will just be provided
+*/
 func tokenizeCommand(a *argnode, args []string) (*argnode, []string, bool, bool) {
 	ok := false
 	skip := false
@@ -336,42 +350,100 @@ func tokenizeCommand(a *argnode, args []string) (*argnode, []string, bool, bool)
 		return nil, args, ok, skip
 	}
 
-	index := 1
-
-	newargnode := newNode(a._arg.copy())
+	newCommandArgument := newNode(a._arg.copy())
 	//fmt.Println(args)
 	if verbose {
 		fmt.Println(string(COLOR_GREEN_I) + ":::::::::: COMMAND ACCEPTED ::::::::::" + string(COLOR_RESET))
+		fmt.Println(newCommandArgument)
+		fmt.Println(args)
 	}
-	args = args[index:]
+	args = args[1:]
 
 	if len(args) == 0 {
-		data, ok := a._arg.data_type.dtype_custom_callback(a._arg.data_type, args[index])
+		//data, ok := a._arg.data_type.dtype_custom_callback(a._arg.data_type, args[index])
 
 		if ok {
-			newargnode._arg.data_type.data = data
+			//newargnode._arg.data_type.data = data
 		} else {
 		}
 	}
-	for index = 1; index < len(args); index++ {
 
-		if len(a._arg.data_type.data_flag) > 0 {
+	if verbose {
+		fmt.Println(string(COLOR_GREEN_I) + ":::::::::: COMMAND ACCEPTED ::::::::::" + string(COLOR_RESET))
+		fmt.Println(newCommandArgument._sub)
+		fmt.Println(args)
+		fmt.Println(a)
+	}
 
-			data, ok := a._arg.data_type.dtype_custom_callback(a._arg.data_type, args[index])
+	if len(a._sub) > 0 {
+		if verbose {
+			fmt.Println(string(COLOR_PINK_I) + ":::::::::: TOKENIZING SUBTREE ::::::::::" + string(COLOR_RESET))
+		}
 
-			if ok {
-				newargnode._arg.data_type.data = data
-			} else {
+		//jump again into the trailing path
+		newArgs, newSubArgumentNode, _ok, _skip := a.tokenizeArg(args)
+
+		if _ok {
+			ok = _ok
+
+		}
+		if _skip {
+
+			args = newArgs
+			skip = _skip
+		}
+		if newSubArgumentNode != nil && len(newSubArgumentNode._sub) == 1 && newSubArgumentNode._sub[0]._arg != nil {
+
+			newCommandArgument._sub = []*argnode{}
+
+			newsubnode := newSubArgumentNode._sub[0].clone()
+
+			newsubnode._parent = newCommandArgument
+
+			newsubnode._arg.data_type.data = newSubArgumentNode._sub[0]._arg.data_type.data
+
+			newCommandArgument._sub = append(newCommandArgument._sub, newsubnode)
+
+			newCommandArgument._depth = newsubnode._depth + 1
+			args = newArgs
+
+		}
+
+		if !_ok || newArgs == nil {
+			return newCommandArgument, args, ok, skip
+		}
+	} else {
+
+		if len(args) > 0 {
+
+			newCommandArgument._arg.data_type.data = args
+			args = []string{}
+
+		}
+
+	}
+
+	/*
+		for index = 1; index < len(args); index++ {
+
+			if len(a._arg.data_type.data_flag) > 0 {
+
+				data, ok := a._arg.data_type.dtype_custom_callback(a._arg.data_type, args[index])
+
+				if ok {
+					newargnode._arg.data_type.data = data
+				} else {
+					break
+				}
+
+			}
+			if a._sub == nil || len(a._sub) == 0 {
 				break
 			}
+		}
+		newargs := args[index:]*/
 
-		}
-		if a._sub == nil || len(a._sub) == 0 {
-			break
-		}
-	}
-	newargs := args[index:]
-	return newargnode, newargs, ok, skip
+	return newCommandArgument, args, ok, skip
 }
 
 func tokenizeParameter(a *argnode, args []string) (*argnode, []string, bool, bool) {

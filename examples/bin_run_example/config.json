@@ -10,6 +10,12 @@
           "type": "OPTION"
        },
        {
+          "arguments": [
+             {
+                "datatype": "bool",
+                "type": "PARAM"
+             }
+          ],
           "datatype": "bool",
           "flag": "interactive",
           "help": "",
@@ -19,6 +25,12 @@
           "type": "OPTION"
        },
        {
+          "arguments": [
+             {
+                "datatype": "bool",
+                "type": "PARAM"
+             }
+          ],
           "datatype": "bool",
           "flag": "logging",
           "help": "In case we want to create a history file in which we store all previously executed commands",
@@ -27,6 +39,12 @@
           "type": "OPTION"
        },
        {
+          "arguments": [
+             {
+                "datatype": "bool",
+                "type": "PARAM"
+             }
+          ],
           "datatype": "bool",
           "flag": "history",
           "help": "Use and allow a current history when in interactive mode. Commands need to be rerunable",
@@ -35,6 +53,12 @@
           "type": "OPTION"
        },
        {
+          "arguments": [
+             {
+                "datatype": "bool",
+                "type": "PARAM"
+             }
+          ],
           "datatype": "bool",
           "flag": "historyfile",
           "help": "Use and allow a historyfile for multiple executions of the shell, Commands can be reentered etc..",
@@ -67,8 +91,7 @@
        {
           "flag": "cool",
           "run": "cool",
-          "type": "COMMAND",
-
+          "type": "COMMAND"
        }
     ],
     "author": "ben",

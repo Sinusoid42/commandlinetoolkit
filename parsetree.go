@@ -262,15 +262,25 @@ func (n *argnode) execute(cmdline *CommandLine) CLICODE {
 			if len(cmd._arg.runCommand) > 0 {
 
 				if _, ok := os.OpenFile("./"+cmd._arg.runCommand, os.O_RDONLY, 0666); ok == nil {
-					cmd := exec.Command("./" + cmd._arg.runCommand)
-					cmd.Stdin = os.Stdin
-					cmd.Stdout = os.Stdout
-					cmd.Run()
+
+					args := []string{}
+
+					if cmd._arg.data_type.data != nil {
+						if data, ok := cmd._arg.data_type.data.([]string); ok {
+							args = data
+						}
+
+					}
+
+					_cmd := exec.Command("./"+cmd._arg.runCommand, args...)
+					_cmd.Stdin = os.Stdin
+					_cmd.Stdout = os.Stdout
+					_cmd.Run()
 				} else {
-					cmd := exec.Command(cmd._arg.runCommand)
-					cmd.Stdin = os.Stdin
-					cmd.Stdout = os.Stdout
-					cmd.Run()
+					_cmd := exec.Command(cmd._arg.runCommand)
+					_cmd.Stdin = os.Stdin
+					_cmd.Stdout = os.Stdout
+					_cmd.Run()
 				}
 				return CLI_SUCCESS
 			}
