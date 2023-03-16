@@ -233,26 +233,29 @@ func checkProgramMap(inputmap map[string]interface{}) (map[string]interface{}, b
 	if len(theTypes) == 1 {
 		_depth := 0
 		_, _ok, depth := checkParameter(theTypes[0], &resultmap, &inputmap)
-		if !_ok {
+		if _ok {
 			ok = _ok
 		}
 		_, _ok, _depth = checkOption(theTypes[0], &resultmap, &inputmap)
-		if !_ok {
+		if _ok {
 			ok = _ok
 		}
 		if _depth > depth {
 			depth = _depth
 		}
-		_, _ok = checkWildcard(theTypes[0], &resultmap, &inputmap)
-		if !_ok {
+		_, _ok, _depth = checkWildcard(theTypes[0], &resultmap, &inputmap)
+		if _ok {
 			ok = _ok
 		}
+		if _depth > depth {
+			depth = _depth
+		}
 		_, _ok = checkFlag(theTypes[0], &resultmap, &inputmap)
-		if !_ok {
+		if _ok {
 			ok = _ok
 		}
 		_, _ok, _depth = checkCommand(theTypes[0], &resultmap, &inputmap)
-		if !_ok {
+		if _ok {
 			ok = _ok
 		}
 		if _depth > depth {
@@ -279,7 +282,7 @@ func checkProgramMap(inputmap map[string]interface{}) (map[string]interface{}, b
 func checkMultiArgument(types []string, resultmap *map[string]interface{}, inputmap *map[string]interface{}) (map[string]interface{}, bool, int) {
 
 	ok := true
-
+	//fmt.Println("MULTI ARGUMENT", types, inputmap)
 	argtype := ArgumentType(0)
 
 	depth := 0
@@ -287,32 +290,25 @@ func checkMultiArgument(types []string, resultmap *map[string]interface{}, input
 	for _, t := range types {
 
 		if strings.Compare(t, OPTIONSTRING) == 0 {
-
 			argtype |= OPTION
 			continue
 		}
-
 		if strings.Compare(t, FLAGSTRING) == 0 {
-
 			argtype |= FLAG
 			continue
 		}
 		if strings.Compare(t, COMMANDSTRING) == 0 {
-
 			argtype |= COMMAND
 			continue
 		}
 		if strings.Compare(t, PARAMETERSTRING) == 0 {
-
 			argtype |= PARAMETER
 			continue
 		}
 		if strings.Compare(t, WILDCARDSTRING) == 0 {
-
 			argtype |= WILDCARD
 			continue
 		}
-
 	}
 
 	if !validateArgType(argtype) {
@@ -387,12 +383,38 @@ func checkParameter(theType string, resultmap *map[string]interface{}, inputmap 
 
 		if (*inputmap)[ARGUMENTSKEY] != nil {
 
+			//fmt.Println("HAHAHAHAHAHAHAHAHHAHA")
+			//fmt.Println(inputmap)
+			//fmt.Println(resultmap)
+
 			if i, ok := ((*inputmap)[ARGUMENTSKEY].([]interface{})); ok {
+
+				//fmt.Println("HAHAHAHAHAHAHAHAHHAHA2")
+				//fmt.Println(i)
 				m, ok, q := checkProgramInterfaceArray(i)
+				//fmt.Println("THE FINAL ARGUMENTS MAP", m)
 				depth = q
 				if ok {
 					(*resultmap)[ARGUMENTSKEY] = m
 				}
+			} else if i, ok := ((*inputmap)[ARGUMENTSKEY].([]map[string]interface{})); ok {
+				//fmt.Println("HAHAHAHAHAHAHAHAHHAHA3")
+				for _, M := range i {
+
+					m, ok, q := checkProgramMap(M)
+
+					if q > depth {
+						q = depth
+					}
+
+					if ok {
+						//fmt.Println("APPENDING")
+						(*resultmap)[ARGUMENTSKEY] = append((*resultmap)[ARGUMENTSKEY].([]map[string]interface{}), m)
+					}
+				}
+
+				//m, ok, q := checkProgramInterfaceArray(i)
+
 			}
 
 			return (*resultmap), false, depth + 1
@@ -507,7 +529,9 @@ func checkOption(theType string, resultmap *map[string]interface{}, inputmap *ma
 		}
 	}
 	if dtype, hasDtype := (*resultmap)[DATATYPEKEY].(string); hasDtype {
+
 		if trailingArguments == 1 && (*resultmap)[ARGUMENTSKEY].([]map[string]interface{})[0][TYPEKEY] == PARAMETERSTRING {
+
 			if (*resultmap)[ARGUMENTSKEY].([]map[string]interface{})[0][DATATYPEKEY] != dtype {
 				dtype = (*resultmap)[ARGUMENTSKEY].([]map[string]interface{})[0][DATATYPEKEY].(string)
 				(*resultmap)[DATATYPEKEY] = dtype
@@ -518,14 +542,117 @@ func checkOption(theType string, resultmap *map[string]interface{}, inputmap *ma
 	return *resultmap, ok, depth + 1
 }
 
-func checkWildcard(theType string, resultmap *map[string]interface{}, inputmap *map[string]interface{}) (map[string]interface{}, bool) {
+func checkWildcard(theType string, resultmap *map[string]interface{}, inputmap *map[string]interface{}) (map[string]interface{}, bool, int) {
+	depth := 0
 	if strings.Compare(theType, WILDCARDSTRING) == 0 {
 		if str, _ok := (*inputmap)[LONGFLAGKEY].(string); _ok && len(str) > 0 {
 			copyProgramArgument(resultmap, inputmap)
 		}
-		return (*resultmap), true
+		ok := false
+
+		if (*inputmap)[ARGUMENTSKEY] == nil {
+
+			if dtype, hasDtype := (*resultmap)[DATATYPEKEY].(string); hasDtype {
+
+				//create Parameter argument
+
+				newArg := map[string]interface{}{}
+				newArg[TYPEKEY] = PARAMETERSTRING
+				newArg[DATATYPEKEY] = dtype
+
+				(*resultmap)[ARGUMENTSKEY] = []map[string]interface{}{}
+
+				(*resultmap)[ARGUMENTSKEY] = append((*resultmap)[ARGUMENTSKEY].([]map[string]interface{}), newArg)
+
+			}
+
+			return (*resultmap), true, depth + 1
+		}
+		(*resultmap)[ARGUMENTSKEY] = []map[string]interface{}{}
+
+		depth := 0
+		trailingArguments := 0
+
+		switch (*inputmap)[ARGUMENTSKEY].(type) {
+		case []interface{}:
+			{
+
+				for _, v := range (*inputmap)[ARGUMENTSKEY].([]interface{}) {
+					arg, _ok := v.(map[string]interface{})
+					if !_ok {
+						ok = _ok
+						continue
+					}
+					newarg, _ok, _depth := checkProgramMap(arg)
+					(*resultmap)[ARGUMENTSKEY] = append((*resultmap)[ARGUMENTSKEY].([]map[string]interface{}), newarg)
+					trailingArguments++
+					if _depth > depth {
+						_depth = depth
+					}
+
+				}
+				break
+			}
+		case []map[string]interface{}:
+			{
+				for _, arg := range (*inputmap)[ARGUMENTSKEY].([]map[string]interface{}) {
+					newarg, _ok, _depth := checkProgramMap(arg)
+					(*resultmap)[ARGUMENTSKEY] = append((*resultmap)[ARGUMENTSKEY].([]map[string]interface{}), newarg)
+					if !_ok {
+						ok = _ok
+					}
+					trailingArguments++
+					if _depth > depth {
+						_depth = depth
+					}
+				}
+				break
+			}
+		}
+
+		if dtype, hasDtype := (*resultmap)[DATATYPEKEY].(string); hasDtype {
+
+			if trailingArguments == 0 {
+
+				//create Parameter argument
+
+				newArg := map[string]interface{}{}
+				newArg[TYPEKEY] = PARAMETERSTRING
+				newArg[DATATYPEKEY] = dtype
+
+				(*resultmap)[ARGUMENTSKEY] = append((*resultmap)[ARGUMENTSKEY].([]map[string]interface{}), newArg)
+			}
+		}
+
+		if _, hasDtype := (*resultmap)[DATATYPEKEY].(string); !hasDtype {
+
+			if trailingArguments == 1 && (*resultmap)[ARGUMENTSKEY].([]map[string]interface{})[0][TYPEKEY] == PARAMETERSTRING {
+
+				//create Parameter argument
+
+				(*resultmap)[DATATYPEKEY] = (*resultmap)[ARGUMENTSKEY].([]map[string]interface{})[0][DATATYPEKEY]
+			}
+		}
+		if dtype, hasDtype := (*resultmap)[DATATYPEKEY].(string); hasDtype {
+			if trailingArguments == 1 && (*resultmap)[ARGUMENTSKEY].([]map[string]interface{})[0][TYPEKEY] == PARAMETERSTRING {
+				if (*resultmap)[ARGUMENTSKEY].([]map[string]interface{})[0][DATATYPEKEY] != dtype {
+					dtype = (*resultmap)[ARGUMENTSKEY].([]map[string]interface{})[0][DATATYPEKEY].(string)
+					(*resultmap)[DATATYPEKEY] = dtype
+				}
+			}
+		}
+		if dtype, hasDtype := (*resultmap)[DATATYPEKEY].(string); hasDtype {
+			if trailingArguments == 1 && (*resultmap)[ARGUMENTSKEY].([]map[string]interface{})[0][TYPEKEY] == PARAMETERSTRING {
+				if (*resultmap)[ARGUMENTSKEY].([]map[string]interface{})[0][DATATYPEKEY] != dtype {
+					dtype = (*resultmap)[ARGUMENTSKEY].([]map[string]interface{})[0][DATATYPEKEY].(string)
+					(*resultmap)[DATATYPEKEY] = dtype
+				}
+			}
+		}
+
+		return (*resultmap), ok, depth + 1
 	}
-	return (*resultmap), true
+	return (*resultmap), true, depth
 }
 
 func checkFlag(theType string, resultmap *map[string]interface{}, inputmap *map[string]interface{}) (map[string]interface{}, bool) {
@@ -649,10 +776,11 @@ func checkProgramInterfaceArray(i []interface{}) ([]map[string]interface{}, bool
 	programDepth := 0
 
 	for _, v := range i {
-
 		if arg, __ok := (v.(map[string]interface{})); __ok {
 
 			_arg, _ok, _programDepth := checkProgramMap(arg)
+			//fmt.Println("PROGRAM MAP WAS OK", _ok)
+			//fmt.Println(_arg)
 			if !_ok {
 				ok = _ok
 				continue

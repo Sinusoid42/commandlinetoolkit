@@ -85,7 +85,7 @@
           "flag": "config",
           "help": "Specifies a configuration file, from which commands will be parsed, can only be executed on booting the application",
           "muteable": false,
-          "run": "config, bootonly, exit",
+          "run": "config, bootonly",
           "type": "OPTION"
        }
     ],

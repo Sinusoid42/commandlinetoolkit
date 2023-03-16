@@ -18,7 +18,7 @@ type parser struct {
 }
 
 func newparser() *parser {
-	return &parser{_parseTree: newparsetree(), Executeable: "", d: newDebugHandler()}
+	return &parser{_parseTree: newparsetree(), Executeable: "", d: newDebugHandler(), _executeableTree: newparsetree()}
 }
 
 // from here we also generate the JSON or read the JSON
@@ -58,9 +58,8 @@ func check(query string, def string, m map[string]interface{}) string {
 
 func (p *parser) parse(args []string) (*parsetree, CLICODE) {
 
-	np, err := tokenize(p._parseTree, args)
-
+	parsedTree, err := tokenize(p._parseTree, args)
 	//test
-	return np, err
+	return parsedTree, err
 
 }

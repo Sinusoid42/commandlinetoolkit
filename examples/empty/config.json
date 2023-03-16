@@ -67,6 +67,13 @@
           "type": "OPTION"
        },
        {
+          "arguments": [
+             {
+                "datatype": "bool",
+                "type": "PARAM"
+             }
+          ],
+          "datatype": "bool",
           "flag": "verbose",
           "help": "Run the shell or the entire program in verbose mode. If a number is provided, different verbosities will be used. Can be overwritten.",
           "muteable": true,
@@ -93,18 +100,25 @@
              {
                 "arguments": [
                    {
-                      "datatype": "file",
+                      "arguments": [
+                         {
+                            "datatype": "number",
+                            "required": false,
+                            "type": "PARAM"
+                         }
+                      ],
+                      "datatype": "number",
                       "required": false,
                       "type": "PARAM"
                    }
                 ],
                 "datatype": "number",
-                "required": false,
+                "required": true,
                 "type": "PARAM"
              }
           ],
           "datatype": "number",
-          "flag": "type",
+          "flag": "port",
           "type": "OPTION | WILDCARD"
        }
     ],

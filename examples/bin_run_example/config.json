@@ -67,7 +67,8 @@
        {
           "flag": "cool",
           "run": "cool",
-          "type": "COMMAND"
+          "type": "COMMAND",
+
        }
     ],
     "author": "ben",

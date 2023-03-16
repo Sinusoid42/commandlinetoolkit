@@ -128,7 +128,9 @@ func NewArgument(m map[string]interface{}) (*Argument, error) {
 		d.printError("-->Error: ParseTree: decodeArgType")
 		return nil, errors.New("-->Error: ParseTree: decodeArgType")
 	}
-	arg := &Argument{}
+	arg := &Argument{
+		data_type: createArgDataType(""),
+	}
 	//here we have an option, every time the parser reads leading '--' '-'
 	//if we also have option, wildcard => apply option globally, if option and flag, the argument is consumed immideately globally once
 	if argType&OPTION > 0 {
@@ -171,7 +173,6 @@ func (a *Argument) GetValue() any {
 	if a.data_type == nil {
 		return nil
 	}
-
 	return a.data_type.data
 
 }
@@ -215,8 +216,9 @@ func createOptionArgument(argType ArgumentType, m map[string]interface{}) (*Argu
 	}
 
 	arg := &Argument{
-		arg_type: argType,
-		lflag:    longFlag,
+		arg_type:  argType,
+		lflag:     longFlag,
+		data_type: createArgDataType(""),
 	}
 	if shortFlag, _ok := m[SHORTFLAGKEY].(string); _ok {
 		arg.sflag = shortFlag
@@ -269,8 +271,9 @@ func createWildcardArgument(argType ArgumentType, m map[string]interface{}) (*Ar
 	}
 
 	arg := &Argument{
-		arg_type: argType,
-		lflag:    longFlag,
+		arg_type:  argType,
+		lflag:     longFlag,
+		data_type: createArgDataType(""),
 	}
 
 	if shortFlag, _ok := m[SHORTFLAGKEY].(string); _ok {
@@ -317,6 +320,7 @@ func createCommandArgument(argType ArgumentType, m map[string]interface{}) (*Arg
 		arg_type:   argType,
 		lflag:      longFlag,
 		runCommand: runCmd,
+		data_type:  createArgDataType(""),
 	}
 
 	if shortFlag, _ok := m[SHORTFLAGKEY].(string); _ok {
@@ -352,8 +356,9 @@ func createFlagArgument(argType ArgumentType, m map[string]interface{}) (*Argume
 	}
 
 	arg := &Argument{
-		arg_type: argType,
-		lflag:    longFlag,
+		arg_type:  argType,
+		lflag:     longFlag,
+		data_type: createArgDataType(""),
 	}
 	if shortFlag, _ok := m[SHORTFLAGKEY].(string); _ok {
 		arg.sflag = shortFlag
@@ -385,7 +390,8 @@ func createFlagArgument(argType ArgumentType, m map[string]interface{}) (*Argume
 func createParameterArgument(argType ArgumentType, m map[string]interface{}) (*Argument, error) {
 
 	arg := &Argument{
-		arg_type: argType,
+		arg_type:  argType,
+		data_type: createArgDataType(""),
 	}
 	if longFlag, _ok := m[SHORTFLAGKEY].(string); _ok {
 		arg.lflag = longFlag

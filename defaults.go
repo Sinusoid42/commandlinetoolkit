@@ -163,7 +163,7 @@ func defaultVerbosityOption() map[string]interface{} {
 	m[MUTEABLEKEY] = true
 	m[HELPKEY] = "Run the shell or the entire program in verbose mode. If a number is provided, different verbosities will be used. Can be overwritten."
 	m[RUNKEY] = "verbose"
-
+	m[DATATYPEKEY] = "bool"
 	return m
 }
 
