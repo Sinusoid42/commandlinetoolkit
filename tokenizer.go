@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-const verbose = true
+const verbose = false
 
 /*
 **********************************************************************
