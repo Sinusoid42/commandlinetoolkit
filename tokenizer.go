@@ -34,9 +34,8 @@ func tokenize(p *parsetree, args []string) (*parsetree, CLICODE) {
 		skip: the current
 	*/
 	args, newArg, ok, skip := r.tokenizeArg(args)
-	fmt.Println(skip)
 
-	if !ok {
+	if !ok && skip {
 		//fmt.Println(newArg)
 	} else {
 		code = CLI_SUCCESS
@@ -268,6 +267,9 @@ func tokenizeOption(a *argnode, args []string) (*argnode, []string, bool, bool) 
 			if verbose {
 				fmt.Println(string(COLOR_YELLOW_I) + ":::::::::: OPTION Doesnt allow SPLIT ::::::::::" + string(COLOR_RESET))
 			}
+			ok = false
+			skip = false
+
 			return newOptionArgument, args, ok, skip
 		}
 	}

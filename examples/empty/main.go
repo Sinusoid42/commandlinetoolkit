@@ -8,8 +8,6 @@ import (
 
 func main() {
 
-	fmt.Println("TODO")
-
 	cmdline := commandlinetoolkit.NewCommandLine()
 
 	//cmdline.Set(commandlinetoolkit.SHELL, commandlinetoolkit.CLI_TRUE)
@@ -26,8 +24,6 @@ func main() {
 	cmdline.Parse(os.Args)
 
 	parseTree := cmdline.ParseTree()
-
-	fmt.Println("MAIN CODE NOWs")
 
 	myoption := parseTree.Get("port")
 

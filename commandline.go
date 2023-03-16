@@ -175,7 +175,6 @@ func (c *CommandLine) Exit() {
 }
 
 func (c *CommandLine) Parse(args []string) CLICODE {
-	fmt.Println(args)
 	//program name is at args[0] always by definition
 	//read out the name of the application in the first parameter
 	//run the interactive mode of this commandlineparser
