@@ -174,6 +174,15 @@ func NewArgument(m map[string]interface{}) (*Argument, error) {
 
 func (arg *Argument) AddArgument(newarg *Argument) CLICODE {
 
+	for _, basearg := range arg._sub {
+		if strings.Compare(basearg.lflag, arg.lflag) == 0 {
+
+			newDebugHandler().printError("Could not add Argument as it overlaps with another Argument")
+
+			return CLI_ERROR
+		}
+	}
+
 	if arg._sub == nil {
 		arg._sub = []*Argument{}
 	}

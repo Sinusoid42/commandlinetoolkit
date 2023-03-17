@@ -3,6 +3,7 @@ package commandlinetoolkit
 import (
 	`fmt`
 	`os`
+	`strings`
 )
 
 //base file for building a commandline
@@ -243,6 +244,15 @@ func (c *CommandLine) Parse(args []string) CLICODE {
 }
 
 func (c *CommandLine) AddArgument(arg *Argument, callback func(parameters []*Argument, arguments []*Argument, cmdline *CommandLine) CLICODE) CLICODE {
+	
+	for _, basearg := range c._parser._parseTree._root._sub {
+		if strings.Compare(basearg._arg.lflag, arg.lflag) == 0 {
+			
+			newDebugHandler().printError("Could not add Argument as it overlaps with another Argument")
+			
+			return CLI_ERROR
+		}
+	}
 	
 	if arg != nil && callback != nil {
 		arg.run = callback
