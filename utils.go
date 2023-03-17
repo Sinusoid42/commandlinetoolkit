@@ -18,6 +18,7 @@ Return the Tree visually
 **********************************************************************
 parse a girven Argument Type
 */
+//Reads the Argumenttype from a given given input map after parsing a program json
 func decodeArgType(m map[string]interface{}) (ArgumentType, error) {
 
 	theType := ArgumentType(0)
@@ -68,6 +69,7 @@ func decodeArgType(m map[string]interface{}) (ArgumentType, error) {
 	return theType, nil
 }
 
+// validates if a given ArgumentType after building the lexingtree and returns true, if non excluding properties have been set
 func validateArgType(argtype ArgumentType) bool {
 	if argtype&COMMAND > 0 && (argtype&(OPTION|WILDCARD|FLAG|PARAMETER) > 0) {
 		return false
@@ -87,22 +89,29 @@ func validateArgType(argtype ArgumentType) bool {
 	return true
 }
 
+// creates and stores an error file to the current directory
 func saveErrorFile(fileName string, content string) {
+
+	dir := "error"
+	if _, err := os.Stat(dir); os.IsNotExist(err) {
+		// create the directory if it does not exist
+		err := os.Mkdir(dir, 0755)
+		if err != nil {
+			// handle error
+
+			newDebugHandler().printError("Could not create error file, might need to start with sudo priviledges..")
+
+		}
+	}
 
 	yr, month, day := time.Now().Date()
 	hr := time.Now().Hour()
 	min := time.Now().Minute()
-
 	theTime := strconv.Itoa(yr) + "_" + strconv.Itoa(int(month)) + "_" + strconv.Itoa(day) + "_" + strconv.Itoa(hr) + "_" + strconv.Itoa(min) + "_"
-
-	file, _ := os.OpenFile(theTime+"errsave_"+fileName, os.O_WRONLY|os.O_CREATE, 0666)
-
+	file, _ := os.OpenFile("./error/"+theTime+"errsave_"+fileName, os.O_WRONLY|os.O_CREATE, 0666)
 	writer := bufio.NewWriter(file)
-
 	writer.WriteString(content)
-
 	writer.Flush()
-
 	file.Close()
 }
 

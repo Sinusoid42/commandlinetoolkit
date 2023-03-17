@@ -36,11 +36,25 @@ func newparsetree() *parsetree {
 }
 
 func newNode(arg *Argument) *argnode {
-	return &argnode{
+	node := &argnode{
 		_arg:    arg,
 		_sub:    []*argnode{},
 		_parent: nil,
+		_depth:  1,
 	}
+
+	if arg != nil && arg._sub != nil {
+		for _, a := range arg._sub {
+			_arg := newNode(a)
+			node._sub = append(node._sub, _arg)
+			if _arg._depth > node._depth {
+				node._depth = _arg._depth + 1
+			}
+		}
+		arg._sub = nil
+	}
+
+	return node
 }
 
 func (p *parsetree) Get(s string) *argnode {
@@ -254,6 +268,28 @@ func (n *argnode) execute(cmdline *CommandLine) CLICODE {
 					oargs = append(oargs, p._arg.copy())
 				}
 			}
+			if len(cmd._sub) == 0 && cmd._arg.data_type.data != nil {
+				if untokenizedSubArgs, ok := cmd._arg.data_type.data.([]string); ok {
+
+					for _, argument := range untokenizedSubArgs {
+
+						m := map[string]interface{}{}
+
+						m[TYPEKEY] = OPTIONSTRING
+						m[LONGFLAGKEY] = argument
+
+						newargument, _ := NewArgument(m)
+
+						newargument.data_type.data = argument
+
+						oargs = append(oargs, newargument)
+
+					}
+
+				}
+
+			}
+
 			if cmd._arg.run != nil {
 				if code := cmd._arg.run(oparams, oargs, cmdline); code == CLI_SUCCESS {
 					continue
@@ -361,6 +397,16 @@ func (a *argnode) clone() *argnode {
 	}
 	if a._arg != nil {
 		na._arg = a._arg.copy()
+		if a._arg._sub != nil {
+			//for _, sarg := range a._arg._sub {
+
+			//newargnode := newNode(sarg)
+
+			//na._sub = append(na._sub, newargnode)
+
+			//}
+
+		}
 	}
 
 	for i := 0; i < len(a._sub); i++ {
@@ -369,4 +415,10 @@ func (a *argnode) clone() *argnode {
 	}
 
 	return na
+}
+
+func (a *argnode) appendArgument(arg *Argument) {
+
+	a._sub = append(a._sub, newNode(arg))
+
 }

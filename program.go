@@ -116,6 +116,11 @@ func (p *program) readJsonProgram(filename string) string {
 	return text
 }
 
+func (p *program) storeJsonProfile(prstree *parsetree) CLICODE {
+
+	return CLI_SUCCESS
+}
+
 /*
 ****************************************************************************************************************************************
 

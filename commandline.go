@@ -100,6 +100,7 @@ func (c *CommandLine) ReadJSON(path string) {
 	if title, err := c._parser.parseProgram(c._program); err == nil {
 		
 		c._enabled = true
+		
 		if c._printTitle {
 			fmt.Print(title)
 		}
@@ -239,6 +240,23 @@ func (c *CommandLine) Parse(args []string) CLICODE {
 		}*/
 	return CLI_SUCCESS
 	
+}
+
+func (c *CommandLine) AddArgument(arg *Argument, callback func(parameters []*Argument, arguments []*Argument, cmdline *CommandLine) CLICODE) CLICODE {
+	
+	if arg != nil && callback != nil {
+		arg.run = callback
+		
+		c._parser._parseTree._root.appendArgument(arg)
+		
+		c._program.storeJsonProfile(c._parser._parseTree)
+		
+		fmt.Println("CREATED ARGUMENT")
+		
+		return CLI_SUCCESS
+	}
+	
+	return CLI_ERROR
 }
 
 func (c *CommandLine) log(input string) {

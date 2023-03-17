@@ -106,6 +106,8 @@ type Argument struct {
 
 	paramCallback func(string) bool
 
+	_sub []*Argument
+
 	//after parsing, the arguments array will be filled with trailing !new! parameters or options instances
 	//will only sublayers from the directed subgraph, will not contain parsed arguments from other subtrees of the parsetree
 
@@ -130,11 +132,13 @@ func NewArgument(m map[string]interface{}) (*Argument, error) {
 	}
 	arg := &Argument{
 		data_type: createArgDataType(""),
+		_sub:      []*Argument{},
 	}
 	//here we have an option, every time the parser reads leading '--' '-'
 	//if we also have option, wildcard => apply option globally, if option and flag, the argument is consumed immideately globally once
 	if argType&OPTION > 0 {
 		arg, err = createOptionArgument(argType, m)
+
 	}
 	//with this we set an option, that is given to every subroutine or sub-execution recursively, only in the current tree of commands
 	if argType&WILDCARD > 0 {
@@ -168,6 +172,16 @@ func NewArgument(m map[string]interface{}) (*Argument, error) {
 	return arg, err
 }
 
+func (arg *Argument) AddArgument(newarg *Argument) CLICODE {
+
+	if arg._sub == nil {
+		arg._sub = []*Argument{}
+	}
+	arg._sub = append(arg._sub, newarg)
+
+	return CLI_SUCCESS
+}
+
 func (a *Argument) GetValue() any {
 
 	if a.data_type == nil {
@@ -199,6 +213,7 @@ func (a *Argument) copy() *Argument {
 		paramCallback: a.paramCallback,
 		run:           a.run,
 	}
+
 	arg.choices = make([]string, len(a.choices))
 	copy(arg.choices, a.choices)
 

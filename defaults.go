@@ -287,6 +287,8 @@ func getRunCommand(str string) func(parameters []*Argument, arguments []*Argumen
 				if !cmdline._booted {
 					return CLI_FALSE
 				}
+				fmt.Println(parameters)
+
 				if len(parameters) == 1 {
 					fmt.Println("\n" + string(COLOR_CYAN) + "Reading config file..." + string(COLOR_RESET))
 					cmdline.ReadJSON(parameters[0].GetValue().([]string)[0])
