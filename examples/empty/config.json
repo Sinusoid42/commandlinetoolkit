@@ -120,6 +120,28 @@
           "datatype": "number",
           "flag": "port",
           "type": "OPTION | WILDCARD"
+       },
+       {
+          "flag": "hello",
+          "run": "meinefile",
+          "type": "COMMAND"
+       },
+       {
+          "flag": "juuhuu",
+          "run": "ey",
+          "type": "COMMAND"
+       },
+       {
+          "datatype": "number",
+          "flag": "address",
+          "type": "OPTION",
+          "arguments": [
+             {
+                "datatype": "number",
+                "required": true,
+                "type": "PARAM"
+             }
+          ]
        }
     ],
     "author": "ben",

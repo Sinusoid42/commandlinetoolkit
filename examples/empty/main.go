@@ -50,6 +50,8 @@ func main() {
 
 		fmt.Println("\nDo Something")
 
+		fmt.Println(cmdline.Program())
+
 		return commandlinetoolkit.CLI_SUCCESS
 	})
 

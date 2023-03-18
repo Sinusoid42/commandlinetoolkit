@@ -71,6 +71,13 @@ func (p *parsetree) Get(s string) *argnode {
 	return &argnode{}
 }
 
+func (a *argnode) Value() any {
+	if a._arg != nil {
+		return a._arg.data_type.data
+	}
+	return nil
+}
+
 func (a *argnode) String() string {
 	s := "{"
 
