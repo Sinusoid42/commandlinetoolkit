@@ -37,7 +37,7 @@ func newparsetree() *parsetree {
 
 func newNode(arg *Argument) *argnode {
 	node := &argnode{
-		_arg:    arg,
+		_arg:    arg.copy(),
 		_sub:    []*argnode{},
 		_parent: nil,
 		_depth:  1,

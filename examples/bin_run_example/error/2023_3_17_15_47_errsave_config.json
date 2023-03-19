@@ -67,13 +67,6 @@
           "type": "OPTION"
        },
        {
-          "arguments": [
-             {
-                "datatype": "bool",
-                "type": "PARAM"
-             }
-          ],
-          "datatype": "bool",
           "flag": "verbose",
           "help": "Run the shell or the entire program in verbose mode. If a number is provided, different verbosities will be used. Can be overwritten.",
           "muteable": true,
@@ -86,68 +79,24 @@
                 "datatype": "file",
                 "required": true,
                 "type": "PARAM"
-             }
+             },
           ],
           "datatype": "file",
           "flag": "config",
           "help": "Specifies a configuration file, from which commands will be parsed, can only be executed on booting the application",
           "muteable": false,
-          "run": "config, bootonly",
+          "run": "configFile, bootonly",
           "type": "OPTION"
        },
        {
-          "arguments": [
-             {
-                "arguments": [
-                   {
-                      "arguments": [
-                         {
-                            "datatype": "number",
-                            "required": false,
-                            "type": "PARAM"
-                         }
-                      ],
-                      "datatype": "number",
-                      "required": false,
-                      "type": "PARAM"
-                   }
-                ],
-                "datatype": "number",
-                "required": true,
-                "type": "PARAM"
-             }
-          ],
-          "datatype": "number",
-          "flag": "port",
-          "type": "OPTION | WILDCARD"
-       },
-       {
-          "flag": "hello",
-          "run": "meinefile",
+          "flag": "cool",
+          "run": "cool",
           "type": "COMMAND"
-       },
-       {
-          "flag": "juuhuu",
-          "run": "ey",
-          "type": "COMMAND"
-       },
-       {
-          "arguments": [
-             {
-                "datatype": "number",
-                "required": true,
-                "type": "PARAM"
-             }
-          ],
-          "datatype": "number",
-          "flag": "address",
-          "type": "OPTION"
        }
     ],
     "author": "ben",
     "description": "The description of the application",
     "executeable": "",
     "man": "The Man Page for this application",
-    "title": "MyCustomTitle",
     "version": "0.0.1"
  }

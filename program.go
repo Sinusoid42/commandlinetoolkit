@@ -186,6 +186,7 @@ func (p *program) genTitle() string {
 	title += border
 
 	title += string(COLOR_RESET)
+
 	p._programTitle = string(title)
 
 	return string(title)

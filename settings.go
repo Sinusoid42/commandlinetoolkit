@@ -5,8 +5,10 @@ type settings struct {
 	author      string
 	executeable string
 	description string
+	title       string
 
-	man string
+	customTitle bool
+	man         string
 }
 
 func (s *settings) build(m map[string]interface{}) {
@@ -16,6 +18,16 @@ func (s *settings) build(m map[string]interface{}) {
 	s.version = check(VERSIONKEY, "0.0.1", m)
 
 	s.man = check(MANUALKEY, "Man Page", m)
+
+	s.title = check(TITLEKEY, "", m)
+
+	if m[TITLEKEY] != nil && len(m[TITLEKEY].(string)) >= 0 {
+		s.customTitle = true
+
+	} else {
+		s.title = "Command Line:" + s.version
+		s.customTitle = false
+	}
 
 	s.description = check(DESCRIPTIONKEY, "Description", m)
 

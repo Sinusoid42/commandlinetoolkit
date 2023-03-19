@@ -32,6 +32,7 @@ const (
 	AUTHORKEY             = "author"
 	DESCRIPTIONKEY        = "description"
 	MANUALKEY             = "man"
+	TITLEKEY              = "title"
 	VERSIONKEY            = "version"
 	EXECUTEABLEKEY        = "executeable"
 )
@@ -202,6 +203,10 @@ func (a *Argument) GetValue() any {
 }
 
 func (a *Argument) copy() *Argument {
+
+	if a == nil {
+		return nil
+	}
 
 	arg := &Argument{
 		arg_type: a.arg_type,
