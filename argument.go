@@ -3,6 +3,7 @@ package commandlinetoolkit
 import (
 	"bufio"
 	"errors"
+	"math"
 	"os"
 	"strconv"
 	"strings"
@@ -337,7 +338,10 @@ func createCommandArgument(argType ArgumentType, m map[string]interface{}) (*Arg
 
 	runCmd, _ok := m[RUNKEY].(string)
 	if !_ok {
-		return nil, errors.New("Flag not available")
+
+		//need to make sure, there is a callback or run that at least
+
+		//return nil, errors.New("Flag not available")
 	}
 
 	arg := &Argument{
@@ -460,9 +464,9 @@ func createArgDataType(dtype string) *ArgumentDataType {
 		return &ArgumentDataType{BOOLTYPE.data_flag, checkForBool, nil, FILETYPE.attrib}
 	}
 	if strings.Compare(dtype, STRINGTYPE.data_flag) == 0 {
-		return &ArgumentDataType{BOOLTYPE.data_flag, checkForString, nil, FILETYPE.attrib}
+		return &ArgumentDataType{STRINGTYPE.data_flag, checkForString, nil, FILETYPE.attrib}
 	}
-	if strings.Index(dtype, NUMBERTYPE.data_flag) == 0 && strings.Index(dtype, "[") > 0 && strings.Index(dtype, "]") == len(dtype)-1 {
+	if strings.Index(dtype, NUMBERTYPE.data_flag) == 0 && strings.Index(dtype, "[") > 0 && strings.Index(dtype, "]") > 0 {
 		theoption := strings.TrimPrefix(dtype, NUMBERTYPE.data_flag)
 		return &ArgumentDataType{NUMBERTYPE.data_flag, checkForNumber, nil, theoption}
 	}
@@ -581,11 +585,11 @@ func checkForNumber(a *ArgumentDataType, str string) (any, bool) {
 		min, ok := strconv.ParseFloat(bounds[0], 32)
 
 		if ok != nil {
-			min = 0
+			min = math.Inf(-1)
 		}
 		max, ok := strconv.ParseFloat(bounds[1], 32)
 		if ok != nil {
-			min = 0
+			max = math.Inf(1)
 		}
 		if intNbr, ok := strconv.Atoi(str); ok == nil {
 			return intNbr, intNbr >= int(min) && intNbr <= int(max)

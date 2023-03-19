@@ -132,16 +132,16 @@
           "type": "COMMAND"
        },
        {
-          "datatype": "number",
-          "flag": "address",
-          "type": "OPTION",
           "arguments": [
              {
                 "datatype": "number",
                 "required": true,
                 "type": "PARAM"
              }
-          ]
+          ],
+          "datatype": "number",
+          "flag": "address",
+          "type": "OPTION"
        }
     ],
     "author": "ben",
