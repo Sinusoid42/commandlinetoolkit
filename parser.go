@@ -35,7 +35,7 @@ func (p *parser) parseProgram(prgm *program) (string, error) {
 	//first parse root
 	//recursively parse all other sub-arguments for n-node tree
 
-	return prgm._programTitle, nil
+	return prgm._programName, nil
 }
 
 type StringParseable interface {

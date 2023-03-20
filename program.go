@@ -22,6 +22,7 @@ type program struct {
 	_programName  string
 	_programFile  string
 	_programTitle string
+	_styleTitle   bool
 	_titleLength  int
 	_programDepth int
 	_program      *commandlinetemplate
@@ -148,9 +149,10 @@ func (p *program) writeJsonProgram() {
 
 Generate a Programtitle that is colorful and looks cool based on given paramters of the program
 */
+
 func (p *program) genTitle() string {
 
-	name := "ProgramTitle"
+	name := p._programName
 
 	if len(p._programName) > 0 {
 		name = p._programName
@@ -187,7 +189,60 @@ func (p *program) genTitle() string {
 
 	title += string(COLOR_RESET)
 
+	if p._styleTitle {
+
+		if len(p._programName) < 12 {
+
+			l_0 := ""
+			l_1 := ""
+			l_2 := ""
+			l_3 := ""
+			l_4 := ""
+
+			title = ""
+			pn := strings.ToLower(p._programName)
+			for _, v := range pn {
+
+				a := int(v) - 97
+
+				//color := Color()
+
+				//#anilop
+				color := GenColor("1", INTENSITY_COLORTYPE, BLUE_COLOR)
+
+				if a >= 0 && a <= 26 {
+
+					l_0 += string(color) + " " + l0[(a*13+1):(a*13+13)] + string(COLOR_RESET) + ""
+					//l_0 += string(color) + "" + "             " + string(COLOR_RESET) + ""
+					l_1 += string(color) + "" + l1[(a*13):(a*13+13)] + string(COLOR_RESET) + ""
+					l_2 += string(color) + "" + l2[(a*13):(a*13+13)] + string(COLOR_RESET) + ""
+					l_3 += string(color) + "" + l3[(a*13):(a*13+13)] + string(COLOR_RESET) + ""
+					l_4 += string(color) + "" + l4[(a*13):(a*13+13)] + string(COLOR_RESET) + ""
+
+				} else {
+					l_1 += string(color) + "" + "         " + string(COLOR_RESET) + ""
+					l_0 += string(color) + "" + "         " + string(COLOR_RESET) + ""
+					l_2 += string(color) + "" + "         " + string(COLOR_RESET) + ""
+					l_3 += string(color) + "" + "         " + string(COLOR_RESET) + ""
+					l_4 += string(color) + "" + "         " + string(COLOR_RESET) + ""
+
+				}
+			}
+
+			title = l_0 + "\n" + l_1 + "\n" + l_2 + "\n" + l_3 + "\n" + l_4 + "\n"
+		}
+
+	}
+
 	p._programTitle = string(title)
 
 	return string(title)
 }
+
+const l_ string = `:::::::::::: :::::::::::: :::::::::::: :::::::::::: :::::::::::: :::::::::::: :::::::::::: :::::::::::: :::::::::::: :::::::::::: :::::::::::: :::::::::::: :::::::::::: :::::::::::: :::::::::::: :::::::::::: :::::::::::: :::::::::::: :::::::::::: :::::::::::: :::::::::::: :::::::::::: :::::::::::: :::::::::::: :::::::::::: :::::::::::: :::::::::::: `
+const l0 string = ` ______       ______       ______       _____        ______       ______       ______       __  __         __           __         __  __       __           __    __     __   __      ______       ______       ______       ______       ______       ______       __  __       __   __      __     __    __  __       __  __       ______`
+const l0_ string = `______       ______       ______       _____        ______       ______       ______       __  __         __           __         __  __       __           __    __     __   __      ______       ______       ______       ______       ______       ______       __  __       __   __      __     __    __  __       __  __       ______`
+const l1 string = `/\  __ \     /\  == \     /\  ___\     /\  __-.     /\  ___\     /\  ___\     /\  ___\     /\ \_\ \       /\ \         /\ \       /\ \/ /      /\ \         /\ "-./  \   /\ "-.\ \    /\  __ \     /\  == \     /\  __ \     /\  == \     /\  ___\     /\__  _\     /\ \/\ \     /\ \ / /     /\ \  _ \ \  /\_\_\_\     /\ \_\ \     /\___  \`
+const l2 string = `\ \  __ \    \ \  __<     \ \ \____    \ \ \/\ \    \ \  __\     \ \  __\     \ \ \__ \    \ \ \_\ \      \ \ \        \_\ \      \ \  _"-.    \ \ \____    \ \ \-./\ \  \ \ \-.  \   \ \ \/\ \    \ \  _-/     \ \ \/\_\    \ \  __<     \ \___  \    \/_/\ \/     \ \ \_\ \    \ \ \'/      \ \ \/ ".\ \ \/_/\_\/_    \ \____ \    \/_/  /__`
+const l3 string = ` \ \_\ \_\    \ \_____\    \ \_____\    \ \____-     \ \_____\    \ \_\        \ \_____\    \ \_\ \_\      \ \_\     /\_____\      \ \_\ \_\    \ \_____\    \ \_\ \ \_\  \ \_\\"\_\   \ \_____\    \ \_\        \ \___\_\    \ \_\ \_\    \/\_____\      \ \_\      \ \_____\    \ \__|       \ \__/".~\_\  /\_\/\_\    \/\_____\     /\_____\`
+const l4 string = `  \/_/\/_/     \/_____/     \/_____/     \/____/      \/_____/     \/_/         \/_____/     \/_/\/_/       \/_/     \/_____/       \/_/\/_/     \/_____/     \/_/  \/_/   \/_/ \/_/    \/_____/     \/_/         \/___/_/     \/_/ /_/     \/_____/       \/_/       \/_____/     \/_/         \/_/   \/_/  \/_/\/_/     \/_____/     \/_____/ `

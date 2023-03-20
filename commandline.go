@@ -95,16 +95,21 @@ func (c *CommandLine) ReadJSON(path string) {
 	
 	c._program.checkInputProgram()
 	
-	c._program.genTitle()
-	
 	if title, err := c._parser.parseProgram(c._program); err == nil {
+		
+		c._program._programName = c._parser._parseTree._settings.title
+		c._program._styleTitle = c._parser._parseTree._settings._styleTitle
+		
+		ntitle := c._program.genTitle()
+		
+		if len(ntitle) > 0 {
+			title = ntitle
+		}
 		
 		c._enabled = true
 		
 		if c._printTitle || c._parser._parseTree._settings.customTitle {
 			c._program._programName = c._parser._parseTree._settings.title
-			
-			title = c._program.genTitle()
 			
 			fmt.Print(title)
 		}
@@ -351,8 +356,15 @@ func (c *CommandLine) SetVerbosity(code CLICODE) {
 
 func (c *CommandLine) PrintTitle(print bool) {
 	c._printTitle = print
+	
+}
+
+func (c *CommandLine) StyleTitle(styleTitle bool) {
+	c._program._styleTitle = styleTitle
 }
 
 func (c *CommandLine) SetTitle(title string) {
 	c._program._programTitle = title
+	c._program._programName = title
+	c._parser._parseTree._settings.title = title
 }

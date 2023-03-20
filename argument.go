@@ -35,6 +35,7 @@ const (
 	TITLEKEY              = "title"
 	VERSIONKEY            = "version"
 	EXECUTEABLEKEY        = "executeable"
+	STYLETITLEKEY         = "styleTitle"
 )
 
 const FULLOPTIONPREFIX string = "--"
