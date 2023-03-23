@@ -65,6 +65,7 @@ type shellHandler struct {
 	 */
 	//Predictions
 	_predictionDisplayed bool
+	_showDir             bool
 	_newestPrediction    string
 
 	_requestSuggestionsState bool
@@ -111,6 +112,8 @@ func newShellHandler(_programName string, _logging bool, _usehistory bool, cmdli
 		_requestSuggestionsState: false,
 		_prefixColor:             GenColor(ITALIC_COLORFONT, INTENSITY_COLORTYPE, CYAN_COLOR),
 		_searchPredictionsState:  true,
+
+		_showDir: false,
 
 		_previnputs: [][]Key{},
 		//_enabledHistoryFile: _usehistory,
@@ -667,9 +670,21 @@ Print the prefix for the custom Shell environment
 func (s *shellHandler) printPrefix() {
 
 	fmt.Print("\r")
-	fmt.Print(s._prefixColor)
+	color := GenColor("1", "9", "6")
+	fmt.Print(color)
 	fmt.Print("\r")
+	_prefix := s._preFix
+
+	if s._showDir {
+		dir, err := os.Getwd()
+		if err != nil {
+			dir = ""
+		}
+		s._preFix = dir + "$" + _prefix
+	}
 	fmt.Print(s._preFix)
+
+	s._preFix = _prefix
 	fmt.Print(COLOR_RESET)
 }
 

@@ -208,7 +208,7 @@ func (p *program) genTitle() string {
 				//color := Color()
 
 				//#anilop
-				color := GenColor("1", INTENSITY_COLORTYPE, BLUE_COLOR)
+				color := GenColor("1", "9", "6")
 
 				if a >= 0 && a <= 26 {
 

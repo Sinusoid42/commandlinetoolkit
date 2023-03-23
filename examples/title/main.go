@@ -2,8 +2,10 @@ package main
 
 import (
 	"fmt"
-	"github.com/Sinusoid42/commandlinetoolkit"
+	"net/http"
 	"os"
+
+	"github.com/Sinusoid42/commandlinetoolkit"
 )
 
 func main() {
@@ -52,7 +54,10 @@ func main() {
 
 		fmt.Println("\nDo Something")
 
-		fmt.Println(cmdline.Program())
+		server := http.Server{
+			Addr: ":9006",
+		}
+		go server.ListenAndServe()
 
 		return commandlinetoolkit.CLI_SUCCESS
 	})
