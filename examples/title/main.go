@@ -29,9 +29,23 @@ func main() {
 
 	parseTree := cmdline.ParseTree()
 
-	myoption := parseTree.Get("port")
+	myoption := parseTree.Get("myflag")
 
 	fmt.Println(myoption.Argument().GetValue())
+
+
+
+
+
+
+
+
+
+
+
+
+
+	
 
 	fmt.Println(myoption.Next().Next().Argument().GetValue())
 

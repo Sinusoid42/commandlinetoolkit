@@ -81,6 +81,7 @@ type shellHandler struct {
 
 	 */
 	//prefix and line start
+	_textColor    Color
 	_prefixColor  Color
 	_preFix       string
 	_preFixLength int
@@ -112,8 +113,8 @@ func newShellHandler(_programName string, _logging bool, _usehistory bool, cmdli
 		_requestSuggestionsState: false,
 		_prefixColor:             GenColor(ITALIC_COLORFONT, INTENSITY_COLORTYPE, CYAN_COLOR),
 		_searchPredictionsState:  true,
-
-		_showDir: false,
+		_textColor:               GenColor("1", "1", "6"),
+		_showDir:                 false,
 
 		_previnputs: [][]Key{},
 		//_enabledHistoryFile: _usehistory,
@@ -322,9 +323,12 @@ func (s *shellHandler) processState() bool {
 
 		//remove the arrow key input
 		s._inputDisplayBuffer = s._inputDisplayBuffer[:len(s._inputDisplayBuffer)-2]
+
+		//s._currentInputBuffer = s._currentInputBuffer[:len(s._currentInputBuffer)-2]
+
 		s._inputDisplayBufferLength = len(s._inputDisplayBuffer)
 
-		if !s._history._enabledHistory {
+		if !s._history._enabledHistory && (s._arrowAction == 2 || s._arrowAction == 3) {
 			s._arrowAction = 0
 		}
 	}
@@ -339,6 +343,14 @@ func (s *shellHandler) processState() bool {
 	//handle arrow down
 
 	s.handleArrowDown()
+
+	s.handleArrowLeft()
+
+	s.handleArrowRight()
+
+	if s.checkForArrow() && !s._history._enabledHistory {
+		s.printPrefix()
+	}
 
 	//if history is enabled, we scan through the previous inputs of the commandline
 
@@ -456,6 +468,7 @@ func (s *shellHandler) handleArrowUp() {
 	//l := len(s._lastInput)
 	//if l > 2 && s._lastInput[l-3] == 27 && s._lastInput[l-2] == 91 && s._lastInput[l-1] == 65 {
 	if s._arrowAction == 3 {
+
 		//fmt.Print("\n") //keep the cursor in the line
 		//remove the arrow bytes from the buffer
 
@@ -477,6 +490,72 @@ func (s *shellHandler) handleArrowUp() {
 		//s.moveRight()
 
 		s._history.down()
+
+	}
+}
+
+/*
+*
+Process the input, when a arrow up action is present
+*/
+func (s *shellHandler) handleArrowLeft() {
+	//l := len(s._lastInput)
+	//if l > 2 && s._lastInput[l-3] == 27 && s._lastInput[l-2] == 91 && s._lastInput[l-1] == 65 {
+	if s._arrowAction == 0 {
+		//fmt.Print("\n") //keep the cursor in the line
+		//remove the arrow bytes from the buffer
+
+		//s._lastInputLength = len(s._lastInput)
+		s.removePrediction()
+
+		//s.removeArrowKeyStrokeFromBuffer()
+
+		//clear the current line
+
+		s.clearCurrentLine()
+
+		//debug?
+
+		s._debugHandler.printVerbose(CLI_VERBOSE_SHELL, "\n-->shell: Arrow up")
+
+		//s.printPrefix()
+
+		//s.moveRight()
+
+		//s._history.down()
+
+	}
+}
+
+/*
+*
+Process the input, when a arrow up action is present
+*/
+func (s *shellHandler) handleArrowRight() {
+	//l := len(s._lastInput)
+	//if l > 2 && s._lastInput[l-3] == 27 && s._lastInput[l-2] == 91 && s._lastInput[l-1] == 65 {
+	if s._arrowAction == 1 {
+		//fmt.Print("\n") //keep the cursor in the line
+		//remove the arrow bytes from the buffer
+
+		//s._lastInputLength = len(s._lastInput)
+		s.removePrediction()
+
+		//s.removeArrowKeyStrokeFromBuffer()
+
+		//clear the current line
+
+		s.clearCurrentLine()
+
+		//debug?
+
+		s._debugHandler.printVerbose(CLI_VERBOSE_SHELL, "\n-->shell: Arrow up")
+
+		//s.printPrefix()
+
+		//s.moveRight()
+
+		//s._history.down()
 
 	}
 }
@@ -526,7 +605,7 @@ func (s *shellHandler) read() {
 		s._rtFlag (shell.returnFlag)
 		Store Inputs, reset current new input
 	*/
-	s._arrowAction = 0
+	s._arrowAction = -1
 
 	if s._prevKeyFromStdin == KEY_RETURN {
 
@@ -624,7 +703,9 @@ func (s *shellHandler) handleKeyInput() {
 	}
 
 	//print the keys
+	fmt.Print(s._textColor)
 	fmt.Print(string(s._prevKeyFromStdin))
+	fmt.Print(COLOR_RESET)
 
 	s._rtAction = 0
 	s._inputDisplayBuffer = append(s._inputDisplayBuffer, s._prevKeyFromStdin)
@@ -639,7 +720,7 @@ func (s *shellHandler) handleKeyInput() {
 // TODO or @deprecated
 func (s *shellHandler) checkForArrow() bool {
 
-	if s._arrowAction == 2 || s._arrowAction == 3 {
+	if s._arrowAction == 2 || s._arrowAction == 3 || s._arrowAction == 0 || s._arrowAction == 1 {
 		return true
 	}
 	return false
@@ -719,8 +800,10 @@ func (s *shellHandler) reprintCurrentLine() {
 
 	s.printPrefix()
 
+	fmt.Print(s._textColor)
 	fmt.Print(string(s._inputDisplayBuffer))
 	s._inputDisplayBufferLength = len(s._inputDisplayBuffer)
+	fmt.Print(COLOR_RESET)
 }
 
 /*
@@ -782,7 +865,11 @@ func (s *shellHandler) checkForArrowInput(keyInput Key) bool {
 	if (keyInput == ARROW_UP[2] ||
 		keyInput == ARROW_DOWN[2] ||
 		keyInput == ARROW_LEFT[2] ||
-		keyInput == ARROW_RIGHT[2]) && (s._inputDisplayBuffer[l-1] == ARROW_UP[1] && s._inputDisplayBuffer[l-2] == ARROW_UP[0]) {
+		keyInput == ARROW_RIGHT[2]) &&
+		(s._inputDisplayBuffer[l-1] == ARROW_UP[1] && s._inputDisplayBuffer[l-2] == ARROW_UP[0]) &&
+		(s._inputDisplayBuffer[l-1] == ARROW_DOWN[1] && s._inputDisplayBuffer[l-2] == ARROW_DOWN[0]) &&
+		(s._inputDisplayBuffer[l-1] == ARROW_LEFT[1] && s._inputDisplayBuffer[l-2] == ARROW_LEFT[0]) &&
+		(s._inputDisplayBuffer[l-1] == ARROW_RIGHT[1] && s._inputDisplayBuffer[l-2] == ARROW_RIGHT[0]) {
 
 		//action 0 is button left
 		//action 1 is button right

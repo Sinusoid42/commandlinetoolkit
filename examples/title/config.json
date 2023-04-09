@@ -1,15 +1,6 @@
 {
     "arguments": [
        {
-          "flag": "help",
-          "help": "This is the default help message for the command line demo Execting the example binary, with ./mybinary --help this callback is executed. Can be overwritten",
-          "muteable": true,
-          "run": "exit",
-          "sflag": "h",
-          "shelp": "Only the short Help Menu.Use '--help' for more info.",
-          "type": "OPTION"
-       },
-       {
           "arguments": [
              {
                 "datatype": "bool",
@@ -69,6 +60,30 @@
        {
           "arguments": [
              {
+                "datatype": "file",
+                "required": true,
+                "type": "PARAM"
+             }
+          ],
+          "datatype": "file",
+          "flag": "config",
+          "help": "Specifies a configuration file, from which commands will be parsed, can only be executed on booting the application",
+          "muteable": false,
+          "run": "config, bootonly",
+          "type": "OPTION"
+       },
+       {
+          "flag": "help",
+          "help": "This is the default help message for the command line demo Execting the example binary, with ./mybinary --help this callback is executed. Can be overwritten",
+          "muteable": true,
+          "run": "exit",
+          "sflag": "h",
+          "shelp": "Only the short Help Menu.Use '--help' for more info.",
+          "type": "OPTION"
+       },
+       {
+          "arguments": [
+             {
                 "datatype": "bool",
                 "type": "PARAM"
              }
@@ -83,35 +98,12 @@
        {
           "arguments": [
              {
-                "datatype": "file",
-                "required": true,
+                "datatype": "number[1:100]",
                 "type": "PARAM"
              }
           ],
-          "datatype": "file",
-          "flag": "config",
-          "help": "Specifies a configuration file, from which commands will be parsed, can only be executed on booting the application",
-          "muteable": false,
-          "run": "config, bootonly",
-          "type": "OPTION"
-       },
-       {
-          "arguments": [
-             {
-                "arguments": [
-                   {
-                      "datatype": "number",
-                      "required": false,
-                      "type": "PARAM"
-                   }
-                ],
-                "datatype": "number",
-                "required": true,
-                "type": "PARAM"
-             }
-          ],
-          "datatype": "number",
-          "flag": "port",
+          "datatype": "number[1:100]",
+          "flag": "myflag",
           "type": "OPTION"
        }
     ],
@@ -120,6 +112,6 @@
     "executeable": "",
     "man": "The Man Page for this application",
     "styleTitle": true,
-    "title": "Title Test",
+    "title": "COOL",
     "version": "0.0.1"
  }

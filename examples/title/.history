@@ -20,3 +20,17 @@ test
 test
 test 500
 test
+test
+--config=config.json
+--config=config.json
+clear
+test
+test hallo
+--verbose
+--config=config.json
+--history
+--config=config.json
+--config=config.json
+tes
+--history
+test

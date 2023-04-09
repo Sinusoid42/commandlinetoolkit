@@ -3,6 +3,7 @@ package commandlinetoolkit
 import (
 	`fmt`
 	`os`
+	`strings`
 )
 
 //base file for building a commandline
@@ -185,6 +186,17 @@ func (c *CommandLine) Exit() {
 }
 
 func (c *CommandLine) Parse(args []string) CLICODE {
+	
+	inputArgs := []string{}
+	for _, v := range args {
+		if strings.Index(v, " ") > 0 {
+			q := strings.Split(v, " ")
+			inputArgs = append(inputArgs, q...)
+		} else {
+			inputArgs = append(inputArgs, v)
+		}
+	}
+	args = inputArgs
 	//program name is at args[0] always by definition
 	//read out the name of the application in the first parameter
 	//run the interactive mode of this commandlineparser

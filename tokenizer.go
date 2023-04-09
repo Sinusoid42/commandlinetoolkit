@@ -36,10 +36,15 @@ func tokenize(p *parsetree, args []string) (*parsetree, CLICODE) {
 	args, rootArgument, ok, skip := r.tokenizeArg(args)
 
 	if len(args) > 0 {
-		fmt.Println(string(COLOR_YELLOW_I) + "unrecognized argument(s).." + string(COLOR_RESET))
-		for _, a := range args {
-			fmt.Println(string(COLOR_YELLOW_I) + a + string(COLOR_RESET))
+		fmt.Print(string(COLOR_YELLOW_I) + "\nunrecognized argument(s)..")
+		fmt.Print("\n[")
+		for i, a := range args {
+			fmt.Print(a)
+			if i < len(args)-1 {
+				fmt.Print(", ")
+			}
 		}
+		fmt.Print("]" + string(COLOR_RESET))
 	}
 
 	if !ok && skip {

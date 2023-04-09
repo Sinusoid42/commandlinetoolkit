@@ -165,7 +165,10 @@ func (p *program) genTitle() string {
 		l = len(name)
 	}
 	borderColor := string(COLOR_GRAY_I)
-	titleColor := "\033[0;0;0m\033[49;96;22m"
+	//titleColor := "\033[0;0;0m\033[49;96;22m"
+
+	titleColor := string(GenColor("1", "9", "6"))
+
 	border := "" + borderColor + strings.Repeat("*", p._titleLength+8) + "\n"
 
 	title := border

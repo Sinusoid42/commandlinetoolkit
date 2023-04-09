@@ -1,4 +1,4 @@
-{
+m{
   "version" :  "0.0.2",
   "author:" : "benwinter",
   "description" : "This is a default command line demo example, how i want a  json to be parsed into a callback tree with contitional execution, runtime callback optioons and exeption handling",
