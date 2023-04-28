@@ -52,6 +52,16 @@ var BOOLTYPE ArgumentDataType = ArgumentDataType{"bool", checkForBool, nil, ""}
 	Define all the different ArgumentType required to be parsed inside of the argument command line
 */
 
+var fcallbacks = map[string]func(cmdline *CommandLine){}
+
+func init() {
+
+	fcallbacks["help"] = func(cmdline *CommandLine) {
+		cmdline.PrintHelp()
+	}
+
+}
+
 const OPTION ArgumentType = 0b0000000000000001
 const PARAMETER ArgumentType = 0b0000000000000010
 const WILDCARD ArgumentType = 0b0000000000000100
@@ -105,7 +115,7 @@ type Argument struct {
 	choices []string //is generated dynamically when parsing trailing parameters for a given command
 
 	//the callback function that is called when the argument is parsed
-	callback func() CLICODE
+	callback func(cmdline *CommandLine)
 
 	paramCallback func(string) bool
 
@@ -237,6 +247,15 @@ func (a *Argument) copy() *Argument {
 
 }
 
+func addFrameworkCallback(argument *Argument) {
+	if fcallbacks[argument.lflag] != nil {
+
+		argument.callback = fcallbacks[argument.lflag]
+
+	}
+
+}
+
 func createOptionArgument(argType ArgumentType, m map[string]interface{}) (*Argument, error) {
 
 	//if we have an option, at least a long flag is required, that is already checked before
@@ -287,8 +306,9 @@ func createOptionArgument(argType ArgumentType, m map[string]interface{}) (*Argu
 				arg.run = nil
 			}
 		}
-
 	}
+	addFrameworkCallback(arg)
+
 	return arg, nil
 }
 
@@ -525,6 +545,8 @@ func (a *Argument) String() string {
 		"   flag: " + a.lflag + "\n" + s +
 		"   required: " + strconv.FormatBool(a.required) + "\n" +
 		"   muteable: " + strconv.FormatBool(a.required) + "\n" +
+		"   hasRunF: " + strconv.FormatBool(a.run != nil) + "\n" +
+		"   hasCB: " + strconv.FormatBool(a.callback != nil) + "\n" +
 		"}"
 }
 

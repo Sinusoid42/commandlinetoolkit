@@ -97,6 +97,110 @@ func (a *argnode) String() string {
 	return s + "}"
 }
 
+func (a *argnode) HelpString() string {
+	s := "\t"
+	if a._arg == nil {
+		s += "<nil>"
+		return s
+	}
+	if a._arg.arg_type == OPTION {
+		s += "--"
+	}
+	if len(a._arg.lflag) > 0 {
+
+		s += string(COLOR_CYAN_I) + a._arg.lflag + string(COLOR_RESET) + " "
+
+	}
+
+	if len(s) < 23 {
+		s += "\t"
+	}
+	if len(s) < 10 {
+		s += " \t"
+	}
+
+	if len(s) > 24 {
+		s = s[:24]
+	}
+	if len(a._sub) > 0 {
+		for _, arg := range a._sub {
+			s += arg._HelpString("\t"+string(COLOR_RESET)+string(COLOR_YELLOW_I), ": [ ", " ]"+string(COLOR_RESET))
+		}
+	}
+	if len(s) < 23 {
+		s += " \t"
+	}
+	if len(s) < 25 {
+		s += " \t"
+	}
+	s += "\t" + string(COLOR_RESET) + ": "
+
+	i := 0
+	if a._arg.arg_type == OPTION {
+		i += 1
+		s += "O"
+	}
+	if a._arg.arg_type == COMMAND {
+		i += 1
+		s += "C"
+	}
+	if a._arg.arg_type == PARAMETER {
+		i += 1
+		s += "P"
+	}
+	if a._arg.arg_type == WILDCARD {
+		i += 1
+		s += "W"
+	}
+	if a._arg.arg_type == FLAG {
+		i += 1
+		s += "F"
+	}
+	for q := 0; q < 3-i; q++ {
+		s += "-"
+	}
+	if a._arg.callback != nil {
+		s += "C"
+	} else {
+		s += "-"
+	}
+	if a._arg.run != nil {
+		s += "R"
+	} else {
+		s += "-"
+	}
+
+	s += "\t:"
+
+	if len(a._arg.shelp) <= 0 {
+		s += " " + a._arg.lhelp
+	} else {
+		s += " " + a._arg.shelp
+	}
+	/*
+		if len(a._sub) > 0 {
+			for _, arg := range a._sub {
+				s += arg._HelpString("\n\t\t\t\t\t"+string(COLOR_CYAN_I), ": [ ", " ]"+string(COLOR_RESET))
+			}
+		}*/
+
+	return s
+}
+
+func (a *argnode) _HelpString(s string, start string, end string) string {
+
+	if a._arg.arg_type == PARAMETER {
+		s += start + a._arg.data_type.data_flag
+	}
+	if a._sub != nil && len(a._sub) > 0 {
+		for _, v := range a._sub {
+			s += v._HelpString("", ", ", "")
+		}
+	}
+	s += end
+	return s
+}
+
 func (a *argnode) Get(s string) *argnode {
 
 	for i := 0; i < len(a._sub); i++ {
@@ -248,10 +352,12 @@ func (n *argnode) execute(cmdline *CommandLine) CLICODE {
 			oargs := []*Argument{}
 
 			for _, p := range cmd._sub {
-
 				if p._arg.arg_type&PARAMETER > 0 {
 					oparams = append(oparams, p._arg.copy())
 				}
+			}
+			if cmd._arg.callback != nil {
+				cmd._arg.callback(cmdline)
 			}
 			if cmd._arg.run != nil {
 				if code := cmd._arg.run(oparams, oargs, cmdline); code == CLI_SUCCESS {
@@ -260,7 +366,8 @@ func (n *argnode) execute(cmdline *CommandLine) CLICODE {
 			}
 
 		}
-
+	}
+	for _, cmd := range n._sub {
 		if cmd._arg != nil && cmd._arg.arg_type&COMMAND > 0 {
 
 			args = append(args, cmd._arg.copy())
@@ -292,29 +399,24 @@ func (n *argnode) execute(cmdline *CommandLine) CLICODE {
 						oargs = append(oargs, newargument)
 
 					}
-
 				}
-
 			}
-
+			if cmd._arg.callback != nil {
+				cmd._arg.callback(cmdline)
+			}
 			if cmd._arg.run != nil {
 				if code := cmd._arg.run(oparams, oargs, cmdline); code == CLI_SUCCESS {
 					continue
 				}
 			}
 			if len(cmd._arg.runCommand) > 0 {
-
 				if _, ok := os.OpenFile("./"+cmd._arg.runCommand, os.O_RDONLY, 0666); ok == nil {
-
 					args := []string{}
-
 					if cmd._arg.data_type.data != nil {
 						if data, ok := cmd._arg.data_type.data.([]string); ok {
 							args = data
 						}
-
 					}
-
 					_cmd := exec.Command("./"+cmd._arg.runCommand, args...)
 					_cmd.Stdin = os.Stdin
 					_cmd.Stdout = os.Stdout
@@ -327,9 +429,7 @@ func (n *argnode) execute(cmdline *CommandLine) CLICODE {
 				}
 				return CLI_SUCCESS
 			}
-
 		}
-
 	}
 
 	if n._sub != nil && len(n._sub) > 0 {

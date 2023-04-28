@@ -181,6 +181,16 @@ func (c *CommandLine) Exit() {
 	if c._enabledShell {
 		c._shell._shellHandler._osHandler._wg.Done()
 		c._shell._shellHandler._osHandler._wg.Done()
+	}
+	os.Exit(0)
+}
+
+func (c *CommandLine) PrintHelp() {
+	
+	fmt.Println(string(COLOR_GRAY_I) + "Help Menu: " + c._parser._parseTree._settings.title + string(COLOR_RESET))
+	fmt.Println()
+	for _, v := range c._parser._parseTree._root._sub {
+		fmt.Println(v.HelpString())
 		
 	}
 }
@@ -251,7 +261,16 @@ func (c *CommandLine) Parse(args []string) CLICODE {
 	}
 	
 	ok = execTree.execute(c)
-	
+	if c._shell._shellHandler._attribs&SHELL > 0 {
+		
+		//programmer has to implement a WAIT in the end
+		
+		if c._enabledShell {
+			c._shell.run(c)
+		}
+		
+		c._enabledShell = true
+	}
 	//fmt.Println("Run:", ok)
 	
 	/*
@@ -288,17 +307,6 @@ func (c *CommandLine) runInteractive() {
 }
 
 func (c *CommandLine) Wait() {
-	
-	if c._shell._shellHandler._attribs&SHELL > 0 {
-		
-		//programmer has to implement a WAIT in the end
-		
-		if c._enabledShell {
-			c._shell.run(c)
-		}
-		
-		c._enabledShell = true
-	}
 	
 	c._shell.wait()
 	

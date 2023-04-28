@@ -318,7 +318,6 @@ func getRunCommands(cmds []string) func(parameters []*Argument, arguments []*Arg
 
 		if runProperties&BOOTONLYPROPERTY > 0 {
 			if cmdline._booted {
-
 				return CLI_FALSE
 			}
 		}
@@ -328,13 +327,11 @@ func getRunCommands(cmds []string) func(parameters []*Argument, arguments []*Arg
 				//full
 
 				cmdline.SetVerbosity(-1)
-
 			}
 		}
 
 		//TODO
 		if runCmd&RUNCONFIG > 0 {
-
 			if len(parameters) == 1 {
 				fmt.Println("\n" + string(COLOR_CYAN) + "Reading config file..." + string(COLOR_RESET))
 				fmt.Println(parameters[0].GetValue().([]string)[0])
