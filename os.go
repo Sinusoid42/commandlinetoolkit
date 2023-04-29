@@ -44,7 +44,6 @@ func (o *osHandler) registerSystemSignalCallbacks(s *shellHandler) {
 
 	s._osHandler._sysSignal = make(chan os.Signal, 1)
 	signal.Notify(s._osHandler._sysSignal, os.Interrupt)
-
 	//the shell callback
 	f := func() {
 
@@ -53,7 +52,7 @@ func (o *osHandler) registerSystemSignalCallbacks(s *shellHandler) {
 		if s._debugHandler._verbose&CLI_VERBOSE_OS_SIG > 0 {
 			fmt.Println("osHandler: Booted os signal handling subroutine")
 		}
-
+		index := 0
 		for sig := range s._osHandler._sysSignal {
 			// sig is a ^C, handle it
 
@@ -62,13 +61,14 @@ func (o *osHandler) registerSystemSignalCallbacks(s *shellHandler) {
 			}
 
 			if sig == syscall.SIGINT {
-
+				index++
 				if s._debugHandler._verbose&CLI_VERBOSE_OS_SIG > 0 {
 					fmt.Println("\n-->osHandler: syscall.SIGINT")
 				}
-
+				fmt.Println(index)
 				fmt.Println("Keyboard Interrupt")
 				fmt.Println("Exit? y/n")
+
 				s.printPrefix()
 
 				s._osHandler._sysCall = syscall.SIGINT //sysExit

@@ -809,7 +809,7 @@ func (s *shellHandler) reprintCurrentLine() {
 /*
 *
 Removes a current Prediction and reprints the current displayed line with the most recent entered buffer,
-if arrows were used, the buffer is emnpty
+if arrows were used, the buffer is emptied
 */
 func (s *shellHandler) removePrediction() {
 	if !s._searchPredictionsState || s._attribs&PREDICTIONS == 0 {
@@ -819,6 +819,7 @@ func (s *shellHandler) removePrediction() {
 	s.clearKeys(s._prevPredictionFDisplayLength + s._inputDisplayBufferLength)
 
 	s.reprintCurrentLine()
+
 	s._predictionDisplayed = false
 }
 
