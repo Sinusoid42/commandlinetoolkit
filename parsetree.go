@@ -112,7 +112,7 @@ func (a *argnode) HelpString() string {
 
 	}
 
-	if len(s) < 23 {
+	if len(s) < 22 {
 		s += "\t"
 	}
 	if len(s) < 10 {
@@ -127,10 +127,10 @@ func (a *argnode) HelpString() string {
 			s += arg._HelpString("\t"+string(COLOR_RESET)+string(COLOR_YELLOW_I), ": [ ", " ]"+string(COLOR_RESET))
 		}
 	}
-	if len(s) < 23 {
+	if len(s) < 36 {
 		s += " \t"
 	}
-	if len(s) < 25 {
+	if len(s) < 44 {
 		s += " \t"
 	}
 	s += "\t" + string(COLOR_RESET) + ": "

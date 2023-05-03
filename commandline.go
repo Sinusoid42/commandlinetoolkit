@@ -48,8 +48,8 @@ type CommandLine struct {
 	*/
 
 	_logging bool
-
-	_booted bool
+	_showDir bool
+	_booted  bool
 
 	//available arguments in total
 	_size int32
@@ -109,7 +109,7 @@ func (c *CommandLine) ReadJSON(path string) {
 
 		c._enabled = true
 
-		if c._printTitle || c._parser._parseTree._settings.customTitle {
+		if c._printTitle || c._parser._parseTree._settings._printTitle {
 			c._program._programName = c._parser._parseTree._settings.title
 
 			fmt.Print(title)
@@ -134,7 +134,13 @@ func (c *CommandLine) Set(attrib PROGRAM_ARGUMENT, clicode CLICODE) {
 	} else {
 		c._enabledShell = false
 	}
-
+	if c._shell._shellHandler._attribs&SHELL > 0 {
+		//programmer has to implement a WAIT in the end
+		if c._enabledShell && !c._shell._running {
+			c._shell.run(c)
+		}
+		c._enabledShell = true
+	}
 }
 
 func (c *CommandLine) GetCode(attrib PROGRAM_ARGUMENT) CLICODE {
@@ -251,7 +257,7 @@ func (c *CommandLine) Parse(args []string) CLICODE {
 
 	arguments := args[1:]
 
-	execTree, ok := c._parser.parse(arguments)
+	execTree, ok := c._parser.parse(arguments, c)
 
 	c._parser._executeableTree = execTree
 
@@ -261,23 +267,14 @@ func (c *CommandLine) Parse(args []string) CLICODE {
 	}
 
 	ok = execTree.execute(c)
+
 	if c._shell._shellHandler._attribs&SHELL > 0 {
-
 		//programmer has to implement a WAIT in the end
-
 		if c._enabledShell && !c._shell._running {
 			c._shell.run(c)
 		}
-
 		c._enabledShell = true
 	}
-	//fmt.Println("Run:", ok)
-
-	/*
-		if c._enabledShell {
-			c._shell.run(c)
-
-		}*/
 	return CLI_SUCCESS
 
 }
@@ -307,7 +304,13 @@ func (c *CommandLine) runInteractive() {
 }
 
 func (c *CommandLine) Wait() {
+	if c._enabledShell && !c._shell._running {
+		c._shell.run(c)
+	}
+
+	c._enabledShell = true
 	c._shell._shellHandler.printPrefix()
+
 	c._shell.wait()
 
 	c._shell.Exit()
@@ -317,6 +320,7 @@ func (c *CommandLine) Wait() {
 	//os.Exit(0) //here we simulate the CTRL+C in case the syscall didnt get registered
 }
 
+// TODO
 func (c *CommandLine) checkPredictions(args []string, searchPrefix string, layer int32) (string, CLICODE) {
 
 	if c._verbose&CLI_VERBOSE_PREDICT > 0 {
@@ -380,6 +384,11 @@ func (c *CommandLine) PrintTitle(print bool) {
 
 }
 
+func (c *CommandLine) PrintDir(p bool) {
+	c._showDir = p
+	c._shell._shellHandler._showDir = p
+}
+
 func (c *CommandLine) StyleTitle(styleTitle bool) {
 	c._program._styleTitle = styleTitle
 }
@@ -388,4 +397,13 @@ func (c *CommandLine) SetTitle(title string) {
 	c._program._programTitle = title
 	c._program._programName = title
 	c._parser._parseTree._settings.title = title
+}
+
+func (c *CommandLine) YesNoConfirm() bool {
+	c._shell._shellHandler.printPrefix()
+	if !c._enabledShell || !c._shell._running {
+		fmt.Println("> Shell is not active, cant use y/n confirm")
+		return false
+	}
+	return c._shell._shellHandler._yesNoConfirm()
 }

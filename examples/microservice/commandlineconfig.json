@@ -98,15 +98,17 @@
                    }
                 ],
                 "datatype": "number",
-                "flag": "port",
-                "type": "OPTION"
+                "type": "PARAM"
              }
           ],
+          "datatype": "number",
           "flag": "port",
+          "help": "The ports for the microservice",
           "type": "OPTION"
        }
     ],
     "author": "benwinter",
     "description": "This is a default command line demo example, how i want a  json to be parsed into a callback tree with contitional execution, runtime callback optioons and exeption handling",
-    "version": "0.0.4"
+    "title": "Message",
+    "version": "0.0.5"
  }

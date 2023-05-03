@@ -56,9 +56,9 @@ func check(query string, def string, m map[string]interface{}) string {
 	return _str
 }
 
-func (p *parser) parse(args []string) (*parsetree, CLICODE) {
+func (p *parser) parse(args []string, cmdline *CommandLine) (*parsetree, CLICODE) {
 
-	parsedTree, err := tokenize(p._parseTree, args)
+	parsedTree, err := tokenize(p._parseTree, args, cmdline)
 	//test
 	return parsedTree, err
 

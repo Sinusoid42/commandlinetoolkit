@@ -263,31 +263,55 @@ Registers a 'y' or 'Y' confirm for a given Inputquestion
 Returns true or false
 */
 func (s *shellHandler) yesNoConfirm() bool {
-
 	if len(s._currentInputBuffer) < 1 || len(s._currentInputBuffer) > 1 {
+		s.clearBuffer()
 		return false
 	}
-
 	if s._currentInputBuffer[0] == Key('y') ||
 		s._currentInputBuffer[0] == Key('Y') ||
 		//last chat can be \n, so we checkInputProgram last - 1
 		(len(s._currentInputBuffer) > 3 &&
 			(s._currentInputBuffer[len(s._currentInputBuffer)-2] == Key('y') ||
 				s._currentInputBuffer[len(s._currentInputBuffer)-2] == Key('Y'))) {
+		s.clearBuffer()
 		return true
 	}
+	s.clearBuffer()
 	return false
+}
 
+func (s *shellHandler) _yesNoConfirm() bool {
+
+	for s._rtAction == 0 || s._osHandler._sysCall == syscall.SIGINT {
+	}
+	if s._exit == 1 || s._rtAction != 1 {
+		return false
+	}
+	if len(s._inputDisplayBuffer) < 1 || len(s._inputDisplayBuffer) > 1 {
+		s.clearBuffer()
+		s.newLine()
+		return false
+	}
+	if s._inputDisplayBuffer[0] == Key('y') ||
+		s._inputDisplayBuffer[0] == Key('Y') ||
+		//last chat can be \n, so we checkInputProgram last - 1
+		(len(s._inputDisplayBuffer) > 3 &&
+			(s._inputDisplayBuffer[len(s._inputDisplayBuffer)-2] == Key('y') ||
+				s._inputDisplayBuffer[len(s._inputDisplayBuffer)-2] == Key('Y'))) {
+		s.clearBuffer()
+		s.newLine()
+		return true
+	}
+	s.clearBuffer()
+	s.newLine()
+	return false
 }
 
 func (s *shellHandler) handleState() CLICODE {
-
 	if s.handleSIGINTExit() {
 		return CLI_EXIT
 	}
-
 	s.handleClear()
-
 	return CLI_SUCCESS
 }
 
@@ -299,10 +323,8 @@ func (s *shellHandler) handleClear() {
 }
 
 func (s *shellHandler) handleHistory() {
-
 	s._history.append(string(s._currentInputBuffer))
 	s._history._currentHistoryBufferLength++
-
 }
 
 /*******************************************************************************************************************
@@ -513,10 +535,9 @@ func (s *shellHandler) handleArrowLeft() {
 		//clear the current line
 
 		s.clearCurrentLine()
+		s.reprintCurrentLine()
 
-		//debug?
-
-		s._debugHandler.printVerbose(CLI_VERBOSE_SHELL, "\n-->shell: Arrow up")
+		s._debugHandler.printVerbose(CLI_VERBOSE_SHELL, "\n-->shell: Arrow left")
 
 		//s.printPrefix()
 
@@ -538,25 +559,14 @@ func (s *shellHandler) handleArrowRight() {
 		//fmt.Print("\n") //keep the cursor in the line
 		//remove the arrow bytes from the buffer
 
-		//s._lastInputLength = len(s._lastInput)
 		s.removePrediction()
 
 		//s.removeArrowKeyStrokeFromBuffer()
-
 		//clear the current line
-
 		s.clearCurrentLine()
+		s.reprintCurrentLine()
 
-		//debug?
-
-		s._debugHandler.printVerbose(CLI_VERBOSE_SHELL, "\n-->shell: Arrow up")
-
-		//s.printPrefix()
-
-		//s.moveRight()
-
-		//s._history.down()
-
+		s._debugHandler.printVerbose(CLI_VERBOSE_SHELL, "\n-->shell: Arrow right")
 	}
 }
 
@@ -571,16 +581,12 @@ func (s *shellHandler) requestSuggestionsOnTab() {
 	if s._attribs&SUGGESTIONS == 0 || !s._requestSuggestionsState || s._currentPredictionAvailable || s._prevKeyFromStdin != KEY_TAB {
 		return
 	}
-
 	if !s._requestSuggestions {
-
 		s._consumed = true
 		fmt.Print("There are " + strconv.Itoa(s.cmdline.numberOfSuggestions(strings.Split(string(s._currentInputBuffer), " "), s._parseDepth)) + " available Options. \nDisplay? y/n?\n")
 		//s.printPrefix()
 	}
-
 	s._requestSuggestions = true
-
 }
 
 /*******************************************************************************************************************
@@ -761,7 +767,7 @@ func (s *shellHandler) printPrefix() {
 		if err != nil {
 			dir = ""
 		}
-		s._preFix = dir + "$" + _prefix
+		s._preFix = string(COLOR_GRAY) + dir + string(COLOR_RESET) + "$"
 	}
 	fmt.Print(s._preFix)
 
@@ -787,6 +793,13 @@ func (s *shellHandler) clearCurrentLine() {
 	fmt.Print("\033[0G")
 	//fmt.Print("\u001b[{n}")
 
+}
+func (s *shellHandler) clearBuffer() {
+	s._inputDisplayBuffer = []Key{}
+	s._inputDisplayBufferLength = 0
+	s._currentInputBuffer = []Key{}
+	s._rtAction = 0
+	s._currentPredictionAvailable = false
 }
 
 /*

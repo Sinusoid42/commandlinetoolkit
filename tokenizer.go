@@ -14,7 +14,7 @@ const verbose = false
 tokenize the input from arguments, given by the os or the shell
 build a tree recurively
 */
-func tokenize(p *parsetree, args []string) (*parsetree, CLICODE) {
+func tokenize(p *parsetree, args []string, cmdline *CommandLine) (*parsetree, CLICODE) {
 	newPareTree := newparsetree()
 	r := p._root
 	if r._sub == nil {
@@ -36,8 +36,14 @@ func tokenize(p *parsetree, args []string) (*parsetree, CLICODE) {
 	args, rootArgument, ok, skip := r.tokenizeArg(args)
 
 	if len(args) > 0 {
-		fmt.Print(string(COLOR_YELLOW_I) + "\nunrecognized argument(s)..")
-		fmt.Print("\n[")
+		if cmdline._shell._running {
+			fmt.Println()
+		}
+		fmt.Print(string(COLOR_YELLOW_I) + "unrecognized argument(s)..")
+
+		fmt.Print("\n")
+
+		fmt.Print("[")
 		for i, a := range args {
 			fmt.Print(a)
 			if i < len(args)-1 {
@@ -45,6 +51,9 @@ func tokenize(p *parsetree, args []string) (*parsetree, CLICODE) {
 			}
 		}
 		fmt.Print("]" + string(COLOR_RESET))
+		if !cmdline._shell._running {
+			fmt.Print("\n")
+		}
 	}
 
 	if !ok && skip {

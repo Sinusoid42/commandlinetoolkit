@@ -65,7 +65,7 @@ func (o *osHandler) registerSystemSignalCallbacks(s *shellHandler) {
 				if s._debugHandler._verbose&CLI_VERBOSE_OS_SIG > 0 {
 					fmt.Println("\n-->osHandler: syscall.SIGINT")
 				}
-				fmt.Println(index)
+
 				fmt.Println("Keyboard Interrupt")
 				fmt.Println("Exit? y/n")
 
@@ -82,10 +82,8 @@ func (o *osHandler) registerSystemSignalCallbacks(s *shellHandler) {
 						if s._debugHandler._verbose&CLI_VERBOSE_OS_SIG > 0 {
 							fmt.Println("\n-->osHandler: Exiting out of os handling subroutine")
 						}
-
 						//run at the end once
 						s._osHandler._wg.Add(-1)
-
 						return
 					}
 
