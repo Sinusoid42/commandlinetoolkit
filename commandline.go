@@ -93,7 +93,6 @@ func NewCommandLine() *CommandLine {
 func (c *CommandLine) ReadJSON(path string) {
 
 	c._program.readJsonProgram(path)
-
 	c._program.checkInputProgram()
 
 	if title, err := c._parser.parseProgram(c._program); err == nil {
@@ -106,23 +105,16 @@ func (c *CommandLine) ReadJSON(path string) {
 		if len(ntitle) > 0 {
 			title = ntitle
 		}
-
 		c._enabled = true
 
 		if c._printTitle || c._parser._parseTree._settings._printTitle {
 			c._program._programName = c._parser._parseTree._settings.title
-
 			fmt.Print(title)
 		}
 
 	} else {
-
 		fmt.Print(err)
 	}
-
-	//print the parsetree after fully reading a configuration file or
-	//fmt.Println(c._parser._parseTree)
-
 }
 
 func (c *CommandLine) Set(attrib PROGRAM_ARGUMENT, clicode CLICODE) {
@@ -165,12 +157,12 @@ func (c *CommandLine) newShell() {
 
 func (c *CommandLine) Rebuild() CLICODE {
 
-	//c.Clear()
-
+	//TODO
 	return CLI_SUCCESS
 }
 
 func (c CommandLine) JSON() string {
+	//TODO
 	return "TODO"
 }
 
@@ -192,12 +184,10 @@ func (c *CommandLine) Exit() {
 }
 
 func (c *CommandLine) PrintHelp() {
-
 	fmt.Println(string(COLOR_GRAY_I) + "Help Menu: " + c._parser._parseTree._settings.title + string(COLOR_RESET))
 	fmt.Println()
 	for _, v := range c._parser._parseTree._root._sub {
 		fmt.Println(v.HelpString())
-
 	}
 }
 

@@ -91,17 +91,11 @@
        {
           "arguments": [
              {
-                "arguments": [
-                   {
-                      "datatype": "number",
-                      "type": "PARAM"
-                   }
-                ],
-                "datatype": "number",
+                "datatype": "number[0:15000]",
                 "type": "PARAM"
              }
           ],
-          "datatype": "number",
+          "datatype": "number[0:15000]",
           "flag": "port",
           "help": "The ports for the microservice",
           "type": "OPTION"
@@ -109,6 +103,8 @@
     ],
     "author": "benwinter",
     "description": "This is a default command line demo example, how i want a  json to be parsed into a callback tree with contitional execution, runtime callback optioons and exeption handling",
-    "title": "Message",
+    "printTitle": true,
+    "styleTitle": false,
+    "title": "Hallo Welt",
     "version": "0.0.5"
  }
